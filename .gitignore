@@ -1,0 +1,15 @@
+# Ambientes Virtuais
+.venv/
+venv/
+env/
+
+# Ficheiros Python gerados automaticamente
+__pycache__/
+*.pyc
+
+# Configurações locais (como chaves de API, se tivermos mais tarde)
+.env
+
+# Ficheiros do sistema operativo
+.DS_Store
+Thumbs.db
