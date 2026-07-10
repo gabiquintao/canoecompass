@@ -1,4 +1,5 @@
 import requests
+from database import SessionLocal, WeatherObservation
 
 def fetch_weather_data():
     response = requests.get("https://api.ipma.pt/open-data/observation/meteorology/stations/obs-surface.geojson")
@@ -7,8 +8,8 @@ def fetch_weather_data():
     stations = data['features']
     weather_data = []
 
-    for s in stations:
-        properties = s['properties']
+    for feature in stations:
+        properties = feature['properties']
 
         station = {
             "name": properties['localEstacao'],
@@ -20,5 +21,19 @@ def fetch_weather_data():
     return weather_data
 
 if __name__ == "__main__":
-    result = fetch_weather_data()
-    print(result)
+    weather_data = fetch_weather_data()
+    db = SessionLocal()
+
+    try:
+        for station in weather_data:
+            observation = WeatherObservation(
+                station_name=station["name"],
+                temperature=station["temperature"],
+                wind_speed=station["wind_speed"]
+            )
+            db.add(observation)
+        
+        db.commit()
+
+    finally:
+        db.close()
