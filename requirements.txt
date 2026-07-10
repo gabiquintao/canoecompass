@@ -2,3 +2,6 @@ requests
 python-dotenv
 beautifulsoup4
 selenium
+SQLAlchemy
+psycopg2-binary
+GeoAlchemy2
