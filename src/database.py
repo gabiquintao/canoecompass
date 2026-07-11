@@ -2,7 +2,8 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone
+from datetime import date as dt_date
 from typing import Optional
 
 load_dotenv()
@@ -35,7 +36,7 @@ class RiverFlowObservation(Base):
     station_name: Mapped[str] = mapped_column()
     river_name: Mapped[str] = mapped_column()
     flow_rate: Mapped[Optional[float]] = mapped_column()
-    date: Mapped[date] = mapped_column()
+    date: Mapped[dt_date] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
 if __name__ == "__main__":
