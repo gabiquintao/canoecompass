@@ -16,7 +16,7 @@ def parse_date(date_str: str) -> Optional[date]:
     except ValueError:
         return None
 
-def fetch_river_flow(station_code: str = "17G/02H") -> list[dict[str, Any]]:
+def fetch_river_flow(station_code: str) -> list[dict[str, Any]]:
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     driver = webdriver.Chrome(options=chrome_options)
@@ -122,6 +122,11 @@ def save_flow_data_to_db(flow_data: list[dict[str, Any]]) -> None:
         db.close()
 
 if __name__ == "__main__":
-    data = fetch_river_flow("17G/02H")
-    print(f"Extracted {len(data)} records. Saving to database.")
-    save_flow_data_to_db(data)
+    stations_code: list[str] = ["17G/02H", "12G/01AE", "27L/01H"]
+
+    for code in stations_code:
+        print(f"Processing station: {code}")
+        data = fetch_river_flow(code)
+
+        print(f"Extracted {len(data)} records. Saving to database.")
+        save_flow_data_to_db(data)
