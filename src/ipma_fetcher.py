@@ -1,17 +1,18 @@
 import requests
+from typing import Any
 from database import SessionLocal, WeatherObservation
 
-def fetch_weather_data():
+def fetch_weather_data() -> list[dict[str, Any]]:
     response = requests.get("https://api.ipma.pt/open-data/observation/meteorology/stations/obs-surface.geojson")
 
     data = response.json()
     stations = data['features']
-    weather_data = []
+    weather_data: list[dict[str, Any]] = []
 
     for feature in stations:
         properties = feature['properties']
 
-        station = {
+        station: dict[str, Any] = {
             "name": properties['localEstacao'],
             "temperature": properties['temperatura'],
             "wind_speed": properties['intensidadeVentoKM']

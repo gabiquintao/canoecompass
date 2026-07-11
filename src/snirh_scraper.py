@@ -5,22 +5,23 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, date
+from typing import Any, Optional
 
 from database import SessionLocal, RiverFlowObservation
 
-def parse_date(date_str: str) -> datetime.date:
+def parse_date(date_str: str) -> Optional[date]:
     try:
         return datetime.strptime(date_str, "%d/%m/%Y").date()
     except ValueError:
         return None
 
-def fetch_river_flow(station_code: str = "17G/02H") -> list:
+def fetch_river_flow(station_code: str = "17G/02H") -> list[dict[str, Any]]:
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     driver = webdriver.Chrome(options=chrome_options)
     
-    flow_data = []
+    flow_data: list[dict[str, Any]] = []
 
     try:
         url = "https://snirh.apambiente.pt/index.php?idMain=1&idItem=1.2"
@@ -87,12 +88,14 @@ def fetch_river_flow(station_code: str = "17G/02H") -> list:
 
     return flow_data
 
-def save_flow_data_to_db(flow_data: list):
+def save_flow_data_to_db(flow_data: list[dict[str, Any]]) -> None:
     if not flow_data:
+        print("No data to save.")
         return
 
     db = SessionLocal()
     try:
+        new_records_count = 0
         for data in flow_data:
             existing = db.query(RiverFlowObservation).filter(
                 RiverFlowObservation.station_code == data["station_code"],
@@ -108,8 +111,10 @@ def save_flow_data_to_db(flow_data: list):
                     date=data["date"]
                 )
                 db.add(observation)
+                new_records_count += 1
                 
         db.commit()
+        print(f"Successfully saved {new_records_count} new river flow records to the database.")
     except Exception as e:
         db.rollback()
         print(f"Database error: {e}")
@@ -118,4 +123,5 @@ def save_flow_data_to_db(flow_data: list):
 
 if __name__ == "__main__":
     data = fetch_river_flow("17G/02H")
+    print(f"Extracted {len(data)} records. Saving to database.")
     save_flow_data_to_db(data)
