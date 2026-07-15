@@ -57,13 +57,14 @@ def seed_database() -> None:
                 wave_max_danger=1.2
             )
         ]
-        
+
         for body in initial_bodies:
             existing = db.query(WaterBody).filter(WaterBody.name == body.name).first()
             if not existing:
                 db.add(body)
-        
+
         db.commit()
+
     finally:
         db.close()
 

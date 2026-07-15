@@ -12,7 +12,7 @@ class NavigabilityScore(Enum):
 def evaluate_river(wb: WaterBody, obs: Optional[DataObservation]) -> NavigabilityScore:
     if not obs or obs.flow_rate_m3s is None or wb.flow_min is None or wb.flow_max is None or wb.flow_danger is None:
         return NavigabilityScore.UNKNOWN
-    
+
     flow = obs.flow_rate_m3s
     if flow >= wb.flow_danger:
         return NavigabilityScore.DANGEROUS
@@ -25,7 +25,7 @@ def evaluate_river(wb: WaterBody, obs: Optional[DataObservation]) -> Navigabilit
 def evaluate_wind(obs: Optional[DataObservation]) -> NavigabilityScore:
     if not obs or obs.wind_speed_kmh is None:
         return NavigabilityScore.UNKNOWN
-    
+
     wind = obs.wind_speed_kmh
     if wind > 40.0:
         return NavigabilityScore.DANGEROUS
@@ -42,13 +42,13 @@ def evaluate_water_body(wb: WaterBody) -> dict[str, Any]:
             .filter(DataObservation.water_body_id == wb.id)\
             .order_by(DataObservation.date.desc())\
             .first()
-        
+
         flow_score = NavigabilityScore.UNKNOWN
         wind_score = evaluate_wind(latest_obs)
 
         if wb.type == WaterBodyType.RIVER:
             flow_score = evaluate_river(wb, latest_obs)
-        
+
         final_score = NavigabilityScore.UNKNOWN
         scores = [s for s in (flow_score, wind_score) if s != NavigabilityScore.UNKNOWN]
         if scores:
@@ -73,5 +73,6 @@ def evaluate_water_body(wb: WaterBody) -> dict[str, Any]:
             "wind_score": wind_score.value,
             "final_score": final_score.value
         }
+
     finally:
         db.close()

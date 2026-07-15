@@ -1,5 +1,4 @@
 import type { Station } from "../../types/api";
-import { RIVER_THRESHOLDS, WIND_THRESHOLDS } from "../../constants/scores";
 import { ScoreBadge } from "../ScoreBadge/ScoreBadge";
 import styles from "./DetailPanel.module.css";
 
@@ -19,8 +18,6 @@ export function DetailPanel({ station }: Props) {
         );
     }
 
-    // thresholds are now dynamic on the backend
-
     return (
         <section className={styles.panel} aria-label="Station detail">
             <div className={styles.content}>
@@ -34,7 +31,7 @@ export function DetailPanel({ station }: Props) {
                     <ScoreBadge score={station.final_score} size="lg" />
                 </div>
 
-                <SectionTitle>MEASUREMENTS</SectionTitle>
+                <SectionTitle>Measurements</SectionTitle>
                 <table className={styles.table}>
                     <thead>
                         <tr>
@@ -79,28 +76,7 @@ export function DetailPanel({ station }: Props) {
                     </tbody>
                 </table>
 
-
-                <SectionTitle>WIND THRESHOLDS</SectionTitle>
-                <table className={styles.table}>
-                    <tbody>
-                        <tr>
-                            <td>Excellent</td>
-                            <td className={styles.val}>≤ {WIND_THRESHOLDS.poor} km/h</td>
-                        </tr>
-                        <tr>
-                            <td>Poor</td>
-                            <td className={styles.val}>
-                                {WIND_THRESHOLDS.poor}–{WIND_THRESHOLDS.dangerous} km/h
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Dangerous</td>
-                            <td className={styles.val}>&gt; {WIND_THRESHOLDS.dangerous} km/h</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <SectionTitle>GEOLOCATION</SectionTitle>
+                <SectionTitle>Geolocation</SectionTitle>
                 <table className={styles.table}>
                     <tbody>
                         <tr>

@@ -18,12 +18,13 @@ app.add_middleware(
 def get_stations_score() -> list[dict[str, Any]]:
     db = SessionLocal()
     results: list[dict[str, Any]] = []
-    
+
     try:
         water_bodies = db.query(WaterBody).all()
         for wb in water_bodies:
             score_data = evaluate_water_body(wb)
             results.append(score_data)
         return results
+
     finally:
         db.close()
