@@ -8,13 +8,13 @@ import styles from "./App.module.css";
 
 export default function App() {
     const { stations, loading, error, lastUpdated, refetch } = useStations();
-    const [selectedCode, setSelectedCode] = useState<string | null>(null);
+    const [selectedId, setSelectedId] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
-    const selectedStation = stations.find((s) => s.station_code === selectedCode) ?? null;
+    const selectedStation = stations.find((s) => s.id === selectedId) ?? null;
 
     const filteredStations = stations.filter((s) =>
-        s.station_name.toLowerCase().includes(searchQuery.toLowerCase())
+        s.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
@@ -30,15 +30,15 @@ export default function App() {
             <main className={styles.main}>
                 <Sidebar
                     stations={filteredStations}
-                    selectedCode={selectedCode}
-                    onSelect={setSelectedCode}
+                    selectedId={selectedId}
+                    onSelect={setSelectedId}
                     searchQuery={searchQuery}
                     onSearch={setSearchQuery}
                 />
                 <StationMap
                     stations={filteredStations}
-                    selectedCode={selectedCode}
-                    onSelect={setSelectedCode}
+                    selectedId={selectedId}
+                    onSelect={setSelectedId}
                 />
                 <DetailPanel station={selectedStation} />
             </main>

@@ -5,15 +5,15 @@ import styles from "./Sidebar.module.css";
 
 interface Props {
     stations: Station[];
-    selectedCode: string | null;
-    onSelect: (code: string) => void;
+    selectedId: number | null;
+    onSelect: (id: number) => void;
     searchQuery: string;
     onSearch: (query: string) => void;
 }
 
-export function Sidebar({ stations, selectedCode, onSelect, searchQuery, onSearch }: Props) {
+export function Sidebar({ stations, selectedId, onSelect, searchQuery, onSearch }: Props) {
     const filtered = stations.filter((s) =>
-        s.station_name.toLowerCase().includes(searchQuery.toLowerCase())
+        s.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
@@ -51,16 +51,16 @@ export function Sidebar({ stations, selectedCode, onSelect, searchQuery, onSearc
                         )}
                         {filtered.map((s) => (
                             <tr
-                                key={s.station_code}
-                                className={`${styles.row} ${s.station_code === selectedCode ? styles.rowActive : ""}`}
-                                onClick={() => onSelect(s.station_code)}
+                                key={s.id}
+                                className={`${styles.row} ${s.id === selectedId ? styles.rowActive : ""}`}
+                                onClick={() => onSelect(s.id)}
                                 tabIndex={0}
-                                onKeyDown={(e) => e.key === "Enter" && onSelect(s.station_code)}
-                                aria-selected={s.station_code === selectedCode}
+                                onKeyDown={(e) => e.key === "Enter" && onSelect(s.id)}
+                                aria-selected={s.id === selectedId}
                             >
                                 <td>
-                                    <div className={styles.name}>{s.station_name}</div>
-                                    <div className={styles.code}>{s.station_code}</div>
+                                    <div className={styles.name}>{s.name}</div>
+                                    <div className={styles.code}>{s.type}</div>
                                 </td>
                                 <td>
                                     <ScoreBadge score={s.final_score} />

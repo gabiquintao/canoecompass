@@ -19,16 +19,16 @@ export function DetailPanel({ station }: Props) {
         );
     }
 
-    const thresholds = RIVER_THRESHOLDS[station.station_code] ?? null;
+    // thresholds are now dynamic on the backend
 
     return (
         <section className={styles.panel} aria-label="Station detail">
             <div className={styles.content}>
                 <div className={styles.header}>
                     <div>
-                        <h2 className={styles.name}>{station.station_name}</h2>
+                        <h2 className={styles.name}>{station.name}</h2>
                         <div className={styles.meta}>
-                            SNIRH: <code>{station.station_code}</code>
+                            Type: <code>{station.type}</code>
                         </div>
                     </div>
                     <ScoreBadge score={station.final_score} size="lg" />
@@ -79,33 +79,6 @@ export function DetailPanel({ station }: Props) {
                     </tbody>
                 </table>
 
-                <SectionTitle>Flow Thresholds</SectionTitle>
-                <table className={styles.table}>
-                    <tbody>
-                        {thresholds ? (
-                            <>
-                                <tr>
-                                    <td>Excellent (min)</td>
-                                    <td className={styles.val}>≥ {thresholds.min} m³/s</td>
-                                </tr>
-                                <tr>
-                                    <td>Good (max)</td>
-                                    <td className={styles.val}>≤ {thresholds.max} m³/s</td>
-                                </tr>
-                                <tr>
-                                    <td>Dangerous</td>
-                                    <td className={styles.val}>≥ {thresholds.danger} m³/s</td>
-                                </tr>
-                            </>
-                        ) : (
-                            <tr>
-                                <td colSpan={2} className={styles.na}>
-                                    No thresholds defined for this station.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
 
                 <SectionTitle>WIND THRESHOLDS</SectionTitle>
                 <table className={styles.table}>

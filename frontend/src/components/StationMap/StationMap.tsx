@@ -20,11 +20,11 @@ const PORTUGAL_BOUNDS: [[number, number], [number, number]] = [
 
 interface Props {
     stations: Station[];
-    selectedCode: string | null;
-    onSelect: (code: string) => void;
+    selectedId: number | null;
+    onSelect: (id: number) => void;
 }
 
-export function StationMap({ stations, selectedCode, onSelect }: Props) {
+export function StationMap({ stations, selectedId, onSelect }: Props) {
     const [, setZoom] = useState(6.5);
 
     return (
@@ -35,12 +35,12 @@ export function StationMap({ stations, selectedCode, onSelect }: Props) {
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
 
                 {stations.map((station) => {
-                    const isSelected = station.station_code === selectedCode;
+                    const isSelected = station.id === selectedId;
                     const color = SCORE_META[station.final_score]?.color ?? "#6b7280";
 
                     return (
                         <CircleMarker
-                            key={station.station_code}
+                            key={station.id}
                             center={[station.latitude, station.longitude]}
                             pathOptions={{
                                 fillColor: color,
@@ -48,10 +48,10 @@ export function StationMap({ stations, selectedCode, onSelect }: Props) {
                                 weight: isSelected ? 2.5 : 1.5,
                                 fillOpacity: 1,
                             }}
-                            eventHandlers={{ click: () => onSelect(station.station_code) }}
+                            eventHandlers={{ click: () => onSelect(station.id) }}
                         >
                             <Tooltip>
-                                <strong>{station.station_name}</strong>
+                                <strong>{station.name}</strong>
                             </Tooltip>
                         </CircleMarker>
                     );

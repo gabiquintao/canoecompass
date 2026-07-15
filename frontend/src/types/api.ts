@@ -1,8 +1,9 @@
 export type NavigabilityScore = "EXCELLENT" | "GOOD" | "POOR" | "DANGEROUS" | "UNKNOWN";
 
 export interface Station {
-    station_code: string;
-    station_name: string;
+    id: number;
+    name: string;
+    type: string;
     latitude: number;
     longitude: number;
     flow_rate_m3s: number | null;

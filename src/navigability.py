@@ -63,7 +63,7 @@ def evaluate_water_body(wb: WaterBody) -> dict[str, Any]:
 
         return {
             "id": wb.id,
-            "station_name": wb.name,
+            "name": wb.name,
             "type": wb.type.value,
             "latitude": wb.latitude,
             "longitude": wb.longitude,
