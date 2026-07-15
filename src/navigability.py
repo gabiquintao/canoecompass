@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Any, Optional
-from database import SessionLocal, RiverFlowObservation, WeatherObservation
+from database import SessionLocal, WaterBody, DataObservation, WaterBodyType
 
 class NavigabilityScore(Enum):
     EXCELLENT = "EXCELLENT"
@@ -9,81 +9,69 @@ class NavigabilityScore(Enum):
     DANGEROUS = "DANGEROUS"
     UNKNOWN = "UNKNOWN"
 
-RIVER_THRESHOLDS: dict[str, dict[str, float]] = {
-    "17G/02H": {
-        "min_flow": 50.0,
-        "max_flow": 400.0,
-        "danger_flow": 700.0
-    },
-    "27L/01H": {
-        "min_flow": 10.0,
-        "max_flow": 150.0,
-        "danger_flow": 300.0
-    }
-}
-
-def evaluate_flow(station_code: str, flow_rate: Optional[float]) -> NavigabilityScore:
-    if flow_rate is None:
+def evaluate_river(wb: WaterBody, obs: Optional[DataObservation]) -> NavigabilityScore:
+    if not obs or obs.flow_rate_m3s is None or wb.flow_min is None or wb.flow_max is None or wb.flow_danger is None:
         return NavigabilityScore.UNKNOWN
     
-    if station_code not in RIVER_THRESHOLDS:
-        return NavigabilityScore.UNKNOWN
-    
-    thresholds = RIVER_THRESHOLDS[station_code]
-
-    if flow_rate >= thresholds["danger_flow"]:
+    flow = obs.flow_rate_m3s
+    if flow >= wb.flow_danger:
         return NavigabilityScore.DANGEROUS
-    
-    elif flow_rate < thresholds["min_flow"]:
+    if flow < wb.flow_min or flow > wb.flow_max:
         return NavigabilityScore.POOR
-    
-    elif flow_rate <= thresholds["max_flow"]:
+    if flow <= wb.flow_min + (wb.flow_max - wb.flow_min) * 0.6:
         return NavigabilityScore.EXCELLENT
+    return NavigabilityScore.GOOD
+
+def evaluate_wind(obs: Optional[DataObservation]) -> NavigabilityScore:
+    if not obs or obs.wind_speed_kmh is None:
+        return NavigabilityScore.UNKNOWN
     
-    else:
-        return NavigabilityScore.GOOD
-    
-def evaluate_station(station_code: str) -> dict[str, Any]:
+    wind = obs.wind_speed_kmh
+    if wind > 40.0:
+        return NavigabilityScore.DANGEROUS
+    if wind > 25.0:
+        return NavigabilityScore.POOR
+    if wind <= 15.0:
+        return NavigabilityScore.EXCELLENT
+    return NavigabilityScore.GOOD
+
+def evaluate_water_body(wb: WaterBody) -> dict[str, Any]:
     db = SessionLocal()
-
     try:
-        latest_flow = db.query(RiverFlowObservation)\
-            .filter(RiverFlowObservation.station_code == station_code)\
-            .order_by(RiverFlowObservation.date.desc())\
+        latest_obs = db.query(DataObservation)\
+            .filter(DataObservation.water_body_id == wb.id)\
+            .order_by(DataObservation.date.desc())\
             .first()
         
-        flow_rate = latest_flow.flow_rate if latest_flow else None
-        flow_score = evaluate_flow(station_code, flow_rate)
+        flow_score = NavigabilityScore.UNKNOWN
+        wind_score = evaluate_wind(latest_obs)
 
-        latest_weather = db.query(WeatherObservation)\
-            .order_by(WeatherObservation.created_at.desc())\
-            .first()
+        if wb.type == WaterBodyType.RIVER:
+            flow_score = evaluate_river(wb, latest_obs)
         
-        wind_speed = latest_weather.wind_speed if latest_weather else None
-        wind_score = NavigabilityScore.UNKNOWN
-
-        if wind_speed is not None:
-            if wind_speed > 40.0:
-                wind_score = NavigabilityScore.DANGEROUS
-            elif wind_speed > 25.0:
-                wind_score = NavigabilityScore.POOR
+        final_score = NavigabilityScore.UNKNOWN
+        scores = [s for s in (flow_score, wind_score) if s != NavigabilityScore.UNKNOWN]
+        if scores:
+            if NavigabilityScore.DANGEROUS in scores:
+                final_score = NavigabilityScore.DANGEROUS
+            elif NavigabilityScore.POOR in scores:
+                final_score = NavigabilityScore.POOR
+            elif all(s == NavigabilityScore.EXCELLENT for s in scores):
+                final_score = NavigabilityScore.EXCELLENT
             else:
-                wind_score = NavigabilityScore.EXCELLENT
-
-        final_score = flow_score
-        if flow_score == NavigabilityScore.DANGEROUS or wind_score == NavigabilityScore.DANGEROUS:
-            final_score = NavigabilityScore.DANGEROUS
-        elif flow_score == NavigabilityScore.POOR or wind_score == NavigabilityScore.POOR:
-            final_score = NavigabilityScore.POOR
+                final_score = NavigabilityScore.GOOD
 
         return {
-            "station_code": station_code,
-            "flow_rate_m3s": flow_rate,
-            "wind_speed_kmh": wind_speed,
+            "id": wb.id,
+            "station_name": wb.name,
+            "type": wb.type.value,
+            "latitude": wb.latitude,
+            "longitude": wb.longitude,
+            "flow_rate_m3s": latest_obs.flow_rate_m3s if latest_obs else None,
+            "wind_speed_kmh": latest_obs.wind_speed_kmh if latest_obs else None,
             "flow_score": flow_score.value,
             "wind_score": wind_score.value,
             "final_score": final_score.value
         }
-    
     finally:
         db.close()
