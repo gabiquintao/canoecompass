@@ -21,9 +21,6 @@ export function useStations(): UseStationsResult {
     useEffect(() => {
         let cancelled = false;
 
-        setLoading(true);
-        setError(null);
-
         fetch(API_URL)
             .then((res) => {
                 if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
@@ -46,7 +43,11 @@ export function useStations(): UseStationsResult {
         };
     }, [tick]);
 
-    const refetch = () => setTick((t) => t + 1);
+    const refetch = () => {
+        setLoading(true);
+        setError(null);
+        setTick((t) => t + 1);
+    };
 
     return { stations, loading, error, lastUpdated, refetch };
 }

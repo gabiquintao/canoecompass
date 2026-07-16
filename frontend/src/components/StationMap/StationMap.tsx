@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Tooltip, useMapEvents } from "react-leaflet";
 import type { Station } from "../../types/api";
+import type { LeafletEvent } from "leaflet";
 import { SCORE_META } from "../../constants/scores";
 import styles from "./StationMap.module.css";
 
@@ -9,7 +10,7 @@ interface MapEventsProps {
 }
 
 function MapEvents({ onZoom }: MapEventsProps) {
-    useMapEvents({ zoomend: (e: any) => onZoom(e.target.getZoom()) });
+    useMapEvents({ zoomend: (e: LeafletEvent) => onZoom(e.target.getZoom()) });
     return null;
 }
 

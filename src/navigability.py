@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Any, Optional
-from database import SessionLocal, WaterBody, DataObservation, WaterBodyType
+
+from database import DataObservation, SessionLocal, WaterBody, WaterBodyType
+
 
 class NavigabilityScore(Enum):
     EXCELLENT = "EXCELLENT"
@@ -9,8 +11,15 @@ class NavigabilityScore(Enum):
     DANGEROUS = "DANGEROUS"
     UNKNOWN = "UNKNOWN"
 
+
 def evaluate_river(wb: WaterBody, obs: Optional[DataObservation]) -> NavigabilityScore:
-    if not obs or obs.flow_rate_m3s is None or wb.flow_min is None or wb.flow_max is None or wb.flow_danger is None:
+    if (
+        not obs
+        or obs.flow_rate_m3s is None
+        or wb.flow_min is None
+        or wb.flow_max is None
+        or wb.flow_danger is None
+    ):
         return NavigabilityScore.UNKNOWN
 
     flow = obs.flow_rate_m3s
@@ -21,6 +30,7 @@ def evaluate_river(wb: WaterBody, obs: Optional[DataObservation]) -> Navigabilit
     if flow <= wb.flow_min + (wb.flow_max - wb.flow_min) * 0.6:
         return NavigabilityScore.EXCELLENT
     return NavigabilityScore.GOOD
+
 
 def evaluate_wind(obs: Optional[DataObservation]) -> NavigabilityScore:
     if not obs or obs.wind_speed_kmh is None:
@@ -35,13 +45,16 @@ def evaluate_wind(obs: Optional[DataObservation]) -> NavigabilityScore:
         return NavigabilityScore.EXCELLENT
     return NavigabilityScore.GOOD
 
+
 def evaluate_water_body(wb: WaterBody) -> dict[str, Any]:
     db = SessionLocal()
     try:
-        latest_obs = db.query(DataObservation)\
-            .filter(DataObservation.water_body_id == wb.id)\
-            .order_by(DataObservation.date.desc())\
+        latest_obs = (
+            db.query(DataObservation)
+            .filter(DataObservation.water_body_id == wb.id)
+            .order_by(DataObservation.date.desc())
             .first()
+        )
 
         flow_score = NavigabilityScore.UNKNOWN
         wind_score = evaluate_wind(latest_obs)
@@ -71,7 +84,7 @@ def evaluate_water_body(wb: WaterBody) -> dict[str, Any]:
             "wind_speed_kmh": latest_obs.wind_speed_kmh if latest_obs else None,
             "flow_score": flow_score.value,
             "wind_score": wind_score.value,
-            "final_score": final_score.value
+            "final_score": final_score.value,
         }
 
     finally:

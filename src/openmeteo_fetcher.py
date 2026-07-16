@@ -1,7 +1,8 @@
-import requests
 from datetime import date
 
-from database import SessionLocal, WaterBody, WaterBodyType, DataObservation
+import requests
+
+from database import DataObservation, SessionLocal, WaterBody, WaterBodyType
 
 
 def fetch_data_for_water_bodies() -> None:
@@ -14,10 +15,12 @@ def fetch_data_for_water_bodies() -> None:
             wind_params = {
                 "latitude": str(wb.latitude),
                 "longitude": str(wb.longitude),
-                "current": "wind_speed_10m"
+                "current": "wind_speed_10m",
             }
 
-            wind_response = requests.get("https://api.open-meteo.com/v1/forecast", params=wind_params)
+            wind_response = requests.get(
+                "https://api.open-meteo.com/v1/forecast", params=wind_params
+            )
             wind_data = wind_response.json()
             wind_speed = wind_data["current"]["wind_speed_10m"]
 
@@ -26,10 +29,12 @@ def fetch_data_for_water_bodies() -> None:
                 flow_params = {
                     "latitude": str(wb.latitude),
                     "longitude": str(wb.longitude),
-                    "daily": "river_discharge"
+                    "daily": "river_discharge",
                 }
 
-                flow_response = requests.get("https://flood-api.open-meteo.com/v1/flood", params=flow_params)
+                flow_response = requests.get(
+                    "https://flood-api.open-meteo.com/v1/flood", params=flow_params
+                )
                 flow_data = flow_response.json()
 
                 if "daily" in flow_data and "river_discharge" in flow_data["daily"]:
@@ -44,7 +49,7 @@ def fetch_data_for_water_bodies() -> None:
                 date=date.today(),
                 is_forecast=False,
                 flow_rate_m3s=flow_rate,
-                wind_speed_kmh=wind_speed
+                wind_speed_kmh=wind_speed,
             )
             db.add(obs)
             print(f"[{wb.name}] Dados guardados na base de dados!")
@@ -52,6 +57,7 @@ def fetch_data_for_water_bodies() -> None:
         db.commit()
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     fetch_data_for_water_bodies()

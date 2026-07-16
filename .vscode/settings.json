@@ -1,41 +1,45 @@
 {
-  // Format on every save
   "editor.formatOnSave": true,
   "editor.formatOnPaste": true,
 
-  // Tab key inserts 4 spaces
   "editor.tabSize": 4,
-  // Do NOT auto-detect indentation from file content — always use tabSize above
   "editor.detectIndentation": false,
 
-  // Use Prettier as the default formatter for everything it supports
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-
-  // Per-language overrides
-  "[python]": {
-    // Prettier doesn't support Python — use Black or Ruff instead
-    "editor.defaultFormatter": "ms-python.black-formatter",
-    "editor.formatOnSave": true
-  },
-  "[markdown]": {
-    "editor.wordWrap": "on"
-  },
-
-  // Make VS Code honour .editorconfig (insert_final_newline, trim_whitespace, etc.)
-  "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
 
-  // Show Prettier errors in the Problems panel
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "prettier.requireConfig": true,
 
-  // ESLint: auto-fix on save (import order, unused vars, etc.)
+  "editor.rulers": [88],
+  "editor.wordWrap": "on",
+
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports.ruff": "explicit",
+      "source.fixAll.ruff": "explicit"
+    }
+  },
+  "python.analysis.typeCheckingMode": "strict",
+
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ]
+
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
 }

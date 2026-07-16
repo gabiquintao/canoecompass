@@ -45,5 +45,3 @@ export const SCORE_META: Record<NavigabilityScore, ScoreMeta> = {
         description: "No data available",
     },
 };
-
-

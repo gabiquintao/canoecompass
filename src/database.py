@@ -17,8 +17,10 @@ engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 class Base(DeclarativeBase):
     pass
+
 
 class WaterBodyType(str, Enum):
     RIVER = "RIVER"
@@ -26,6 +28,7 @@ class WaterBodyType(str, Enum):
     ESTUARY = "ESTUARY"
     COASTAL = "COASTAL"
     LAGOON = "LAGOON"
+
 
 class WaterBody(Base):
     __tablename__ = "water_bodies"
@@ -45,6 +48,7 @@ class WaterBody(Base):
     wave_max_poor: Mapped[float | None] = mapped_column()
     wave_max_danger: Mapped[float | None] = mapped_column()
 
+
 class DataObservation(Base):
     __tablename__ = "data_observations"
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
@@ -57,10 +61,14 @@ class DataObservation(Base):
     wind_gust_kmh: Mapped[float | None] = mapped_column()
     wave_height_m: Mapped[float | None] = mapped_column()
 
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc)
+    )
+
 
 if __name__ == "__main__":
     from sqlalchemy import text
+
     with engine.begin() as conn:
         conn.execute(text("DROP SCHEMA public CASCADE"))
         conn.execute(text("CREATE SCHEMA public"))

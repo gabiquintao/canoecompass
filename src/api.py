@@ -1,6 +1,8 @@
+from typing import Any
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Any
+
 from database import SessionLocal, WaterBody
 from navigability import evaluate_water_body
 
@@ -13,6 +15,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.get("/api/stations/score")
 def get_stations_score() -> list[dict[str, Any]]:

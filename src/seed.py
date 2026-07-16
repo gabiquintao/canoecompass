@@ -1,5 +1,6 @@
 from database import SessionLocal, WaterBody, WaterBodyType
 
+
 def seed_database() -> None:
     db = SessionLocal()
     try:
@@ -13,7 +14,7 @@ def seed_database() -> None:
                 district="Santarém",
                 flow_min=50.0,
                 flow_max=400.0,
-                flow_danger=700.0
+                flow_danger=700.0,
             ),
             WaterBody(
                 name="Guadiana (Pulo do Lobo)",
@@ -24,7 +25,7 @@ def seed_database() -> None:
                 district="Beja",
                 flow_min=10.0,
                 flow_max=150.0,
-                flow_danger=300.0
+                flow_danger=300.0,
             ),
             WaterBody(
                 name="Mondego (Penacova)",
@@ -35,7 +36,7 @@ def seed_database() -> None:
                 district="Coimbra",
                 flow_min=10.0,
                 flow_max=120.0,
-                flow_danger=250.0
+                flow_danger=250.0,
             ),
             WaterBody(
                 name="Alqueva",
@@ -43,7 +44,7 @@ def seed_database() -> None:
                 latitude=38.20,
                 longitude=-7.50,
                 region="Alentejo",
-                district="Beja"
+                district="Beja",
             ),
             WaterBody(
                 name="Ria de Aveiro",
@@ -54,8 +55,8 @@ def seed_database() -> None:
                 district="Aveiro",
                 wave_max_good=0.4,
                 wave_max_poor=0.8,
-                wave_max_danger=1.2
-            )
+                wave_max_danger=1.2,
+            ),
         ]
 
         for body in initial_bodies:
@@ -67,6 +68,7 @@ def seed_database() -> None:
 
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     seed_database()
