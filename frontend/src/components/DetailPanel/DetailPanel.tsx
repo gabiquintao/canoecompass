@@ -1,12 +1,16 @@
 import type { Station } from "../../types/api";
 import { ScoreBadge } from "../ScoreBadge/ScoreBadge";
 import styles from "./DetailPanel.module.css";
+import { useStationHistory } from "../../hooks/useStationHistory";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 interface Props {
     station: Station | null;
 }
 
 export function DetailPanel({ station }: Props) {
+    const { history, loading } = useStationHistory(station?.id ?? null);
+
     if (!station) {
         return (
             <section className={styles.panel} aria-label="Station detail">
@@ -93,6 +97,67 @@ export function DetailPanel({ station }: Props) {
                         </tr>
                     </tbody>
                 </table>
+
+                <SectionTitle>Recent History</SectionTitle>
+
+                {loading && <p className={styles.loadingText}>Loading</p>}
+
+                {!loading && history.length > 0 && (
+                    <div style={{ width: "100%", height: 250, marginTop: "1rem" }}>
+                        <ResponsiveContainer>
+                            <LineChart
+                                data={history}
+                                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                            >
+                                <XAxis dataKey="date" fontSize={12} />
+
+                                <YAxis
+                                    yAxisId="flow"
+                                    orientation="left"
+                                    stroke="#3b82f6"
+                                    fontSize={12}
+                                />
+
+                                <YAxis
+                                    yAxisId="wind"
+                                    orientation="right"
+                                    stroke="#10b981"
+                                    fontSize={12}
+                                />
+
+                                <Tooltip
+                                    contentStyle={{
+                                        borderRadius: "8px",
+                                        border: "none",
+                                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                                    }}
+                                />
+
+                                <Line
+                                    yAxisId="flow"
+                                    type="monotone"
+                                    dataKey="flow_rate"
+                                    stroke="#3b82f6"
+                                    strokeWidth={3}
+                                    name="Flow Rate (m³/s)"
+                                    dot={{ r: 4 }}
+                                    activeDot={{ r: 6 }}
+                                />
+
+                                <Line
+                                    yAxisId="wind"
+                                    type="monotone"
+                                    dataKey="wind_speed"
+                                    stroke="#10b981"
+                                    strokeWidth={3}
+                                    name="Vento (km/h)"
+                                    dot={{ r: 4 }}
+                                    activeDot={{ r: 6 }}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                )}
             </div>
         </section>
     );

@@ -12,3 +12,9 @@ export interface Station {
     wind_score: NavigabilityScore;
     final_score: NavigabilityScore;
 }
+
+export interface StationHistoryEntry {
+    date: string;
+    flow_rate: number | null;
+    wind_speed: number | null;
+}
