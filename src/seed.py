@@ -3,6 +3,7 @@ from database import SessionLocal, WaterBody, WaterBodyType
 
 def seed_database() -> None:
     db = SessionLocal()
+
     try:
         initial_bodies = [
             WaterBody(

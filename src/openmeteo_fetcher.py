@@ -52,9 +52,10 @@ def fetch_data_for_water_bodies() -> None:
                 wind_speed_kmh=wind_speed,
             )
             db.add(obs)
-            print(f"[{wb.name}] Dados guardados na base de dados!")
+            print(f"[{wb.name}] Data saved in the DB.")
 
         db.commit()
+
     finally:
         db.close()
 
