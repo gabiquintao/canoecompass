@@ -150,7 +150,7 @@ export function DetailPanel({ station }: Props) {
                                     dataKey="wind_speed"
                                     stroke="#10b981"
                                     strokeWidth={3}
-                                    name="Vento (km/h)"
+                                    name="Wind (km/h)"
                                     dot={{ r: 4 }}
                                     activeDot={{ r: 6 }}
                                 />
