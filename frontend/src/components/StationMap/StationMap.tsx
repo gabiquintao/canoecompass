@@ -25,8 +25,23 @@ interface Props {
     onSelect: (id: number) => void;
 }
 
+function MapClickListener({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
+    useMapEvents({
+        click(e) {
+            onMapClick(e.latlng.lat, e.latlng.lng);
+        },
+    });
+    return null;
+}
+
 export function StationMap({ stations, selectedId, onSelect }: Props) {
     const [, setZoom] = useState(6.5);
+    const [newSpotCoords, setNewSpotCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+    const handleMapClick = (lat: number, lng: number) => {
+        console.log(lat, lng);
+        setNewSpotCoords({ lat, lng });
+    };
 
     return (
         <section className={styles.section} aria-label="Map">
@@ -34,6 +49,8 @@ export function StationMap({ stations, selectedId, onSelect }: Props) {
                 <MapEvents onZoom={setZoom} />
 
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+
+                <MapClickListener onMapClick={handleMapClick} />
 
                 {stations.map((station) => {
                     const isSelected = station.id === selectedId;
