@@ -4,6 +4,7 @@ import type { Station } from "../../types/api";
 import type { LeafletEvent } from "leaflet";
 import { SCORE_META } from "../../constants/scores";
 import styles from "./StationMap.module.css";
+import { AddStationModal } from "./AddStationModal";
 
 interface MapEventsProps {
     onZoom: (zoom: number) => void;
@@ -23,6 +24,7 @@ interface Props {
     stations: Station[];
     selectedId: number | null;
     onSelect: (id: number) => void;
+    onStationAdded?: () => void;
 }
 
 function MapClickListener({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
@@ -34,17 +36,51 @@ function MapClickListener({ onMapClick }: { onMapClick: (lat: number, lng: numbe
     return null;
 }
 
-export function StationMap({ stations, selectedId, onSelect }: Props) {
+function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+export function StationMap({ stations, selectedId, onSelect, onStationAdded }: Props) {
     const [, setZoom] = useState(6.5);
     const [newSpotCoords, setNewSpotCoords] = useState<{ lat: number; lng: number } | null>(null);
 
     const handleMapClick = (lat: number, lng: number) => {
-        console.log(lat, lng);
+        const MIN_DISTANCE_KM = 0.5;
+        const nearbyStation = stations.find(
+            (s) => getDistanceKm(lat, lng, s.latitude, s.longitude) < MIN_DISTANCE_KM
+        );
+
+        if (nearbyStation) {
+            onSelect(nearbyStation.id);
+            setNewSpotCoords(null);
+            return;
+        }
+
         setNewSpotCoords({ lat, lng });
     };
 
     return (
         <section className={styles.section} aria-label="Map">
+            {newSpotCoords && (
+                <AddStationModal
+                    lat={newSpotCoords.lat}
+                    lng={newSpotCoords.lng}
+                    onClose={() => setNewSpotCoords(null)}
+                    onSuccess={() => {
+                        onStationAdded?.();
+                    }}
+                />
+            )}
             <MapContainer bounds={PORTUGAL_BOUNDS} className={styles.map}>
                 <MapEvents onZoom={setZoom} />
 
@@ -74,6 +110,17 @@ export function StationMap({ stations, selectedId, onSelect }: Props) {
                         </CircleMarker>
                     );
                 })}
+
+                {newSpotCoords && (
+                    <AddStationModal
+                        lat={newSpotCoords.lat}
+                        lng={newSpotCoords.lng}
+                        onClose={() => setNewSpotCoords(null)}
+                        onSuccess={() => {
+                            onStationAdded?.();
+                        }}
+                    />
+                )}
             </MapContainer>
         </section>
     );

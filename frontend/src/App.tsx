@@ -39,6 +39,7 @@ export default function App() {
                     stations={filteredStations}
                     selectedId={selectedId}
                     onSelect={setSelectedId}
+                    onStationAdded={refetch}
                 />
                 <DetailPanel station={selectedStation} />
             </main>
