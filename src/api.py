@@ -1,12 +1,12 @@
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import DataObservation, SessionLocal, WaterBody
 from navigability import evaluate_water_body
 from schemas import StationCreate
-from utils import get_location_details
+from utils import detect_water_body_info, get_distance_km, get_location_details
 
 app = FastAPI(title="Canoeing Navigability API")
 
@@ -17,6 +17,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/api/stations/detect")
+def detect_station(lat: float, lon: float) -> dict[str, Any]:
+    return detect_water_body_info(lat, lon)
 
 
 @app.get("/api/stations/score")
@@ -55,11 +60,23 @@ def get_station_history(station_id: int) -> list[dict[str, Any]]:
     finally:
         db.close()
 
+
 @app.post("/api/stations")
 def create_station(station: StationCreate) -> dict[str, Any]:
     db = SessionLocal()
 
     try:
+        existing_bodies = db.query(WaterBody).all()
+        for wb in existing_bodies:
+            distance_km = get_distance_km(
+                station.latitude, station.longitude, wb.latitude, wb.longitude
+            )
+            if distance_km < 0.5:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Spot already exists within 500m: {wb.name} ({distance_km:.2f} km away)",
+                )
+
         reg, dist = get_location_details(station.latitude, station.longitude)
 
         new_wb = WaterBody(
@@ -68,7 +85,7 @@ def create_station(station: StationCreate) -> dict[str, Any]:
             longitude=station.longitude,
             type=station.type,
             region=reg,
-            district=dist
+            district=dist,
         )
         db.add(new_wb)
         db.commit()
