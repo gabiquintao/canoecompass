@@ -1,7 +1,8 @@
-from database import SessionLocal, WaterBody, WaterBodyType
+from database import Base, SessionLocal, WaterBody, WaterBodyType, engine
 
 
 def seed_database() -> None:
+    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
     try:
