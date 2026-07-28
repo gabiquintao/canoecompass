@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Station } from "../types/api";
-
-const API_URL = "http://localhost:8000/api/stations/score";
+import { apiClient } from "../lib/apiClient";
 
 interface UseStationsResult {
     stations: Station[];
@@ -21,11 +20,8 @@ export function useStations(): UseStationsResult {
     useEffect(() => {
         let cancelled = false;
 
-        fetch(API_URL)
-            .then((res) => {
-                if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
-                return res.json() as Promise<Station[]>;
-            })
+        apiClient
+            .getStationsScore()
             .then((data) => {
                 if (cancelled) return;
                 setStations(data);

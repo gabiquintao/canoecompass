@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { StationHistoryEntry } from "../types/api";
+import { apiClient } from "../lib/apiClient";
 
 export function useStationHistory(stationId: number | null) {
     const [history, setHistory] = useState<StationHistoryEntry[]>([]);
@@ -14,15 +15,12 @@ export function useStationHistory(stationId: number | null) {
         let cancelled = false;
 
         const fetchHistory = async () => {
+            setHistory([]);
             setLoading(true);
             setError(null);
 
             try {
-                const API_URL = `http://localhost:8000/api/stations/${stationId}/history`;
-                const res = await fetch(API_URL);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-                const data = (await res.json()) as StationHistoryEntry[];
+                const data = await apiClient.getStationHistory(stationId);
 
                 if (!cancelled) {
                     setHistory(data);

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import L from "leaflet";
 import styles from "./AddStationModal.module.css";
+import { apiClient } from "../../lib/apiClient";
 
 interface Props {
     lat: number;
@@ -31,20 +32,13 @@ export function AddStationModal({ lat, lng, onClose, onSuccess }: Props) {
         async function detectInfo() {
             setDetecting(true);
             try {
-                const response = await fetch(
-                    `http://localhost:8000/api/stations/detect?lat=${lat}&lon=${lng}`
-                );
-                if (response.ok && !cancelled) {
-                    const info = await response.json();
-                    if (info.name) {
-                        setName(info.name);
-                    }
-                    if (info.type) {
-                        setType(info.type);
-                    }
+                const info = await apiClient.detectWaterBody(lat, lng);
+                if (!cancelled) {
+                    if (info.name) setName(info.name);
+                    if (info.type) setType(info.type);
                 }
             } catch {
-                // Silently ignore
+                // Silently ignore — auto-detection is best-effort
             } finally {
                 if (!cancelled) {
                     setDetecting(false);
@@ -70,25 +64,12 @@ export function AddStationModal({ lat, lng, onClose, onSuccess }: Props) {
         setErrorMessage(null);
 
         try {
-            const response = await fetch("http://localhost:8000/api/stations", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    name: name.trim(),
-                    latitude: lat,
-                    longitude: lng,
-                    type,
-                }),
+            await apiClient.createStation({
+                name: name.trim(),
+                latitude: lat,
+                longitude: lng,
+                type,
             });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                const msg =
-                    errorData?.detail || `Failed to create station (HTTP ${response.status})`;
-                throw new Error(msg);
-            }
 
             onSuccess();
             onClose();
