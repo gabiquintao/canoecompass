@@ -113,3 +113,11 @@
 code {
     font-family: var(--mono);
 }
+
+.loadingText {
+    font-size: 12px;
+    color: #94a3b8;
+    font-style: italic;
+    margin: 0;
+    padding: 4px 0;
+}
