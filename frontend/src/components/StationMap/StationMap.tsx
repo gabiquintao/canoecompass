@@ -110,17 +110,6 @@ export function StationMap({ stations, selectedId, onSelect, onStationAdded }: P
                         </CircleMarker>
                     );
                 })}
-
-                {newSpotCoords && (
-                    <AddStationModal
-                        lat={newSpotCoords.lat}
-                        lng={newSpotCoords.lng}
-                        onClose={() => setNewSpotCoords(null)}
-                        onSuccess={() => {
-                            onStationAdded?.();
-                        }}
-                    />
-                )}
             </MapContainer>
         </section>
     );
