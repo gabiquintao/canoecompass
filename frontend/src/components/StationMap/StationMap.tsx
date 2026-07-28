@@ -1,19 +1,9 @@
 import { useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Tooltip, useMapEvents } from "react-leaflet";
 import type { Station } from "../../types/api";
-import type { LeafletEvent } from "leaflet";
 import { SCORE_META } from "../../constants/scores";
 import styles from "./StationMap.module.css";
 import { AddStationModal } from "./AddStationModal";
-
-interface MapEventsProps {
-    onZoom: (zoom: number) => void;
-}
-
-function MapEvents({ onZoom }: MapEventsProps) {
-    useMapEvents({ zoomend: (e: LeafletEvent) => onZoom(e.target.getZoom()) });
-    return null;
-}
 
 const PORTUGAL_BOUNDS: [[number, number], [number, number]] = [
     [36.8, -9.8],
@@ -51,7 +41,6 @@ function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): 
 }
 
 export function StationMap({ stations, selectedId, onSelect, onStationAdded }: Props) {
-    const [, setZoom] = useState(6.5);
     const [newSpotCoords, setNewSpotCoords] = useState<{ lat: number; lng: number } | null>(null);
 
     const handleMapClick = (lat: number, lng: number) => {
@@ -82,8 +71,6 @@ export function StationMap({ stations, selectedId, onSelect, onStationAdded }: P
                 />
             )}
             <MapContainer bounds={PORTUGAL_BOUNDS} className={styles.map}>
-                <MapEvents onZoom={setZoom} />
-
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
 
                 <MapClickListener onMapClick={handleMapClick} />
