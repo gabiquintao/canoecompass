@@ -13,7 +13,6 @@ interface Props {
 export function AddStationModal({ lat, lng, onClose, onSuccess }: Props) {
     const [name, setName] = useState("");
     const [type, setType] = useState("RIVER");
-    const [detecting, setDetecting] = useState(false);
     const [saving, setSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -30,19 +29,13 @@ export function AddStationModal({ lat, lng, onClose, onSuccess }: Props) {
         let cancelled = false;
 
         async function detectInfo() {
-            setDetecting(true);
             try {
                 const info = await apiClient.detectWaterBody(lat, lng);
-                if (!cancelled) {
-                    if (info.name) setName(info.name);
-                    if (info.type) setType(info.type);
+                if (!cancelled && info.type) {
+                    setType(info.type);
                 }
             } catch {
                 // Silently ignore — auto-detection is best-effort
-            } finally {
-                if (!cancelled) {
-                    setDetecting(false);
-                }
             }
         }
 
@@ -94,12 +87,6 @@ export function AddStationModal({ lat, lng, onClose, onSuccess }: Props) {
             <p className={styles.coordinates}>
                 {lat.toFixed(4)}° N, {lng.toFixed(4)}° W
             </p>
-
-            {detecting && (
-                <div className={styles.detectingText}>
-                    Detecting location name and water type...
-                </div>
-            )}
 
             {errorMessage && (
                 <div style={{ color: "#dc2626", fontSize: "0.75rem", marginBottom: "0.5rem" }}>
