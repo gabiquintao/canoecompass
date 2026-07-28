@@ -1,6 +1,11 @@
+from datetime import datetime
+
 import requests
 
 from database import DataObservation, SessionLocal, WaterBody, WaterBodyType
+
+BACKFILL_START = "2026-07-01"
+BACKFILL_END = "2026-07-17"
 
 
 def fetch_data_for_water_bodies() -> None:
@@ -13,8 +18,8 @@ def fetch_data_for_water_bodies() -> None:
             wind_params = {
                 "latitude": str(wb.latitude),
                 "longitude": str(wb.longitude),
-                "start_date": "2026-07-01",
-                "end_date": "2026-07-17",
+                "start_date": BACKFILL_START,
+                "end_date": BACKFILL_END,
                 "daily": "wind_speed_10m_max",
             }
 
@@ -25,13 +30,13 @@ def fetch_data_for_water_bodies() -> None:
             dates: list[str] = wind_data["daily"]["time"]
             winds: list[float] = wind_data["daily"]["wind_speed_10m_max"]
 
-            flow_rates: list[float] = []
+            flow_rates: list[float | None] = []
             if wb.type == WaterBodyType.RIVER:
                 flow_params = {
                     "latitude": str(wb.latitude),
                     "longitude": str(wb.longitude),
-                    "start_date": "2026-07-01",
-                    "end_date": "2026-07-17",
+                    "start_date": BACKFILL_START,
+                    "end_date": BACKFILL_END,
                     "daily": "river_discharge",
                 }
 
@@ -39,20 +44,10 @@ def fetch_data_for_water_bodies() -> None:
                     "https://flood-api.open-meteo.com/v1/flood", params=flow_params
                 )
                 flow_data = flow_response.json()
+                flow_rates = flow_data["daily"]["river_discharge"]
 
-                extracted_flows: list[float] = flow_data["daily"]["river_discharge"]
-                flow_rates = extracted_flows
-
-            for i in range(len(dates)):
-                date_str = dates[i]
-                wind_spd = winds[i]
-
-                flow: float | None = None
-                if len(flow_rates) > 0:
-                    flow = flow_rates[i]
-
-                from datetime import datetime
-
+            for i, (date_str, wind_spd) in enumerate(zip(dates, winds)):
+                flow: float | None = flow_rates[i] if flow_rates else None
                 real_date = datetime.strptime(date_str, "%Y-%m-%d").date()
 
                 obs = DataObservation(
