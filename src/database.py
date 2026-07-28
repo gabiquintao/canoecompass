@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from dotenv import load_dotenv
-from sqlalchemy import String, create_engine
+from sqlalchemy import ForeignKey, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 load_dotenv()
@@ -52,7 +52,9 @@ class WaterBody(Base):
 class DataObservation(Base):
     __tablename__ = "data_observations"
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    water_body_id: Mapped[int] = mapped_column(index=True)
+    water_body_id: Mapped[int] = mapped_column(
+        ForeignKey("water_bodies.id"), index=True
+    )
     date: Mapped[dt_date] = mapped_column(index=True)
     is_forecast: Mapped[bool] = mapped_column()
 
