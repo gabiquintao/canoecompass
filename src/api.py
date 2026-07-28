@@ -1,3 +1,4 @@
+import os
 from typing import Generator
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -12,9 +13,15 @@ from utils import detect_water_body_info, get_distance_km, get_location_details
 
 app = FastAPI(title="Canoeing Navigability API")
 
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGIN", "http://localhost:5173").split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
