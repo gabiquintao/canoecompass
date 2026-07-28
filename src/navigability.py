@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import Any, Optional
+from typing import Optional, TypedDict
 
-from database import DataObservation, SessionLocal, WaterBody, WaterBodyType
+from database import DataObservation, WaterBody, WaterBodyType
 
 
 class NavigabilityScore(Enum):
@@ -10,6 +10,19 @@ class NavigabilityScore(Enum):
     POOR = "POOR"
     DANGEROUS = "DANGEROUS"
     UNKNOWN = "UNKNOWN"
+
+
+class WaterBodyScore(TypedDict):
+    id: int
+    name: str
+    type: str
+    latitude: float
+    longitude: float
+    flow_rate_m3s: float | None
+    wind_speed_kmh: float | None
+    flow_score: str
+    wind_score: str
+    final_score: str
 
 
 def evaluate_river(wb: WaterBody, obs: Optional[DataObservation]) -> NavigabilityScore:
@@ -46,46 +59,36 @@ def evaluate_wind(obs: Optional[DataObservation]) -> NavigabilityScore:
     return NavigabilityScore.GOOD
 
 
-def evaluate_water_body(wb: WaterBody) -> dict[str, Any]:
-    db = SessionLocal()
-    try:
-        latest_obs = (
-            db.query(DataObservation)
-            .filter(DataObservation.water_body_id == wb.id)
-            .order_by(DataObservation.date.desc())
-            .first()
-        )
+def evaluate_water_body(
+    wb: WaterBody, latest_obs: Optional[DataObservation]
+) -> WaterBodyScore:
+    flow_score = NavigabilityScore.UNKNOWN
+    wind_score = evaluate_wind(latest_obs)
 
-        flow_score = NavigabilityScore.UNKNOWN
-        wind_score = evaluate_wind(latest_obs)
+    if wb.type == WaterBodyType.RIVER:
+        flow_score = evaluate_river(wb, latest_obs)
 
-        if wb.type == WaterBodyType.RIVER:
-            flow_score = evaluate_river(wb, latest_obs)
+    final_score = NavigabilityScore.UNKNOWN
+    scores = [s for s in (flow_score, wind_score) if s != NavigabilityScore.UNKNOWN]
+    if scores:
+        if NavigabilityScore.DANGEROUS in scores:
+            final_score = NavigabilityScore.DANGEROUS
+        elif NavigabilityScore.POOR in scores:
+            final_score = NavigabilityScore.POOR
+        elif all(s == NavigabilityScore.EXCELLENT for s in scores):
+            final_score = NavigabilityScore.EXCELLENT
+        else:
+            final_score = NavigabilityScore.GOOD
 
-        final_score = NavigabilityScore.UNKNOWN
-        scores = [s for s in (flow_score, wind_score) if s != NavigabilityScore.UNKNOWN]
-        if scores:
-            if NavigabilityScore.DANGEROUS in scores:
-                final_score = NavigabilityScore.DANGEROUS
-            elif NavigabilityScore.POOR in scores:
-                final_score = NavigabilityScore.POOR
-            elif all(s == NavigabilityScore.EXCELLENT for s in scores):
-                final_score = NavigabilityScore.EXCELLENT
-            else:
-                final_score = NavigabilityScore.GOOD
-
-        return {
-            "id": wb.id,
-            "name": wb.name,
-            "type": wb.type.value,
-            "latitude": wb.latitude,
-            "longitude": wb.longitude,
-            "flow_rate_m3s": latest_obs.flow_rate_m3s if latest_obs else None,
-            "wind_speed_kmh": latest_obs.wind_speed_kmh if latest_obs else None,
-            "flow_score": flow_score.value,
-            "wind_score": wind_score.value,
-            "final_score": final_score.value,
-        }
-
-    finally:
-        db.close()
+    return WaterBodyScore(
+        id=wb.id,
+        name=wb.name,
+        type=wb.type.value,
+        latitude=wb.latitude,
+        longitude=wb.longitude,
+        flow_rate_m3s=latest_obs.flow_rate_m3s if latest_obs else None,
+        wind_speed_kmh=latest_obs.wind_speed_kmh if latest_obs else None,
+        flow_score=flow_score.value,
+        wind_score=wind_score.value,
+        final_score=final_score.value,
+    )
