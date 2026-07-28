@@ -1,9 +1,10 @@
 export type NavigabilityScore = "EXCELLENT" | "GOOD" | "POOR" | "DANGEROUS" | "UNKNOWN";
+export type WaterBodyType = "RIVER" | "RESERVOIR" | "ESTUARY" | "COASTAL" | "LAGOON";
 
 export interface Station {
     id: number;
     name: string;
-    type: string;
+    type: WaterBodyType;
     latitude: number;
     longitude: number;
     flow_rate_m3s: number | null;
