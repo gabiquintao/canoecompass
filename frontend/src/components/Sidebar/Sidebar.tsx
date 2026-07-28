@@ -12,10 +12,6 @@ interface Props {
 }
 
 export function Sidebar({ stations, selectedId, onSelect, searchQuery, onSearch }: Props) {
-    const filtered = stations.filter((s) =>
-        s.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
     return (
         <aside className={styles.sidebar}>
             <div className={styles.search}>
@@ -29,7 +25,7 @@ export function Sidebar({ stations, selectedId, onSelect, searchQuery, onSearch 
                     className={styles.searchInput}
                 />
                 <span className={styles.count}>
-                    {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+                    {stations.length} result{stations.length !== 1 ? "s" : ""}
                 </span>
             </div>
 
@@ -42,14 +38,14 @@ export function Sidebar({ stations, selectedId, onSelect, searchQuery, onSearch 
                         </tr>
                     </thead>
                     <tbody>
-                        {filtered.length === 0 && (
+                        {stations.length === 0 && (
                             <tr>
                                 <td colSpan={4} className={styles.empty}>
                                     No stations match your search.
                                 </td>
                             </tr>
                         )}
-                        {filtered.map((s) => (
+                        {stations.map((s) => (
                             <tr
                                 key={s.id}
                                 className={`${styles.row} ${s.id === selectedId ? styles.rowActive : ""}`}
