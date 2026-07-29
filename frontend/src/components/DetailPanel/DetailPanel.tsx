@@ -39,30 +39,67 @@ export function DetailPanel({ station }: Props) {
                 <table className={styles.table}>
                     <thead>
                         <tr>
-                            <th>Parameter</th>
+                            <th>
+                                Parameter{" "}
+                                <InfoTip text="Key environmental factors monitored for navigability and safety." />
+                            </th>
                             <th>Value</th>
-                            <th>Score</th>
+                            <th>
+                                Score{" "}
+                                <InfoTip
+                                    text="Navigability score evaluated against historical percentiles and safety thresholds."
+                                    align="right"
+                                />
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
+                        {station.type === "ESTUARY" || station.tide_level_m != null ? (
+                            <tr>
+                                <td>
+                                    Tide Level{" "}
+                                    <InfoTip text="Water level relative to Mean Sea Level (MSL). 0.0 m is average sea level; positive values indicate rising/high tide, negative values indicate falling/low tide." />
+                                </td>
+                                <td className={styles.val}>
+                                    {station.tide_level_m != null ? (
+                                        <>
+                                            {station.tide_level_m.toFixed(2)}{" "}
+                                            <span className={styles.unit}>m (MSL)</span>
+                                        </>
+                                    ) : (
+                                        <span className={styles.na}>No data</span>
+                                    )}
+                                </td>
+                                <td>
+                                    <ScoreBadge score={station.tide_score ?? "UNKNOWN"} />
+                                </td>
+                            </tr>
+                        ) : (
+                            <tr>
+                                <td>
+                                    Water Flow{" "}
+                                    <InfoTip text="River discharge rate in cubic meters per second (m³/s). Evaluated against historical 15th-80th percentile flow ranges for safe paddling." />
+                                </td>
+                                <td className={styles.val}>
+                                    {station.flow_rate_m3s != null ? (
+                                        <>
+                                            {station.flow_rate_m3s.toFixed(2)}{" "}
+                                            <span className={styles.unit}>m³/s</span>
+                                        </>
+                                    ) : (
+                                        <span className={styles.na}>No data</span>
+                                    )}
+                                </td>
+                                <td>
+                                    <ScoreBadge score={station.flow_score ?? "UNKNOWN"} />
+                                </td>
+                            </tr>
+                        )}
                         <tr>
-                            <td>Water Flow</td>
-                            <td className={styles.val}>
-                                {station.flow_rate_m3s != null ? (
-                                    <>
-                                        {station.flow_rate_m3s.toFixed(2)}{" "}
-                                        <span className={styles.unit}>m³/s</span>
-                                    </>
-                                ) : (
-                                    <span className={styles.na}>No data</span>
-                                )}
-                            </td>
                             <td>
-                                <ScoreBadge score={station.flow_score} />
+                                Wind Speed{" "}
+                                <InfoTip text="Surface wind speed in kilometers per hour (km/h). ≤15 km/h is Excellent, >25 km/h is Poor, and >40 km/h is Dangerous for paddling." />
                             </td>
-                        </tr>
-                        <tr>
-                            <td>Wind Speed</td>
                             <td className={styles.val}>
                                 {station.wind_speed_kmh != null ? (
                                     <>
@@ -84,13 +121,19 @@ export function DetailPanel({ station }: Props) {
                 <table className={styles.table}>
                     <tbody>
                         <tr>
-                            <td>Latitude</td>
+                            <td>
+                                Latitude{" "}
+                                <InfoTip text="Geographic latitude coordinate of the station monitoring point in decimal degrees." />
+                            </td>
                             <td className={styles.val}>
                                 <code>{station.latitude.toFixed(4)}° N</code>
                             </td>
                         </tr>
                         <tr>
-                            <td>Longitude</td>
+                            <td>
+                                Longitude{" "}
+                                <InfoTip text="Geographic longitude coordinate of the station monitoring point in decimal degrees." />
+                            </td>
                             <td className={styles.val}>
                                 <code>{station.longitude.toFixed(4)}° W</code>
                             </td>
@@ -165,4 +208,42 @@ export function DetailPanel({ station }: Props) {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
     return <div className={styles.sectionTitle}>{children}</div>;
+}
+
+function InfoTip({
+    text,
+    align = "left",
+}: {
+    text: string;
+    align?: "left" | "right";
+}) {
+    const tooltipClass =
+        align === "right" ? styles.tooltipRight : styles.tooltipLeft;
+    return (
+        <span className={styles.infoWrapper}>
+            <span className={styles.infoIcon} aria-label="Info">
+                <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+            </span>
+            <span
+                className={`${styles.customTooltip} ${tooltipClass}`}
+                role="tooltip"
+            >
+                {text}
+            </span>
+        </span>
+    );
 }
