@@ -3,12 +3,12 @@ import { SCORE_META } from "../../constants/scores";
 import styles from "./ScoreBadge.module.css";
 
 interface Props {
-    score: NavigabilityScore;
+    score?: NavigabilityScore | null;
     size?: "sm" | "lg";
 }
 
 export function ScoreBadge({ score, size = "sm" }: Props) {
-    const meta = SCORE_META[score];
+    const meta = SCORE_META[(score as NavigabilityScore) ?? "UNKNOWN"] ?? SCORE_META.UNKNOWN;
     return (
         <span
             className={`${styles.badge} ${styles[size]}`}

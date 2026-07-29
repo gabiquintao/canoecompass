@@ -8,8 +8,10 @@ export interface Station {
     latitude: number;
     longitude: number;
     flow_rate_m3s: number | null;
+    tide_level_m?: number | null;
     wind_speed_kmh: number | null;
-    flow_score: NavigabilityScore;
+    flow_score?: NavigabilityScore | null;
+    tide_score?: NavigabilityScore | null;
     wind_score: NavigabilityScore;
     final_score: NavigabilityScore;
 }
