@@ -48,6 +48,9 @@ class WaterBody(Base):
     wave_max_poor: Mapped[float | None] = mapped_column()
     wave_max_danger: Mapped[float | None] = mapped_column()
 
+    tide_min_m: Mapped[float | None] = mapped_column()
+    tide_max_m: Mapped[float | None] = mapped_column()
+
 
 class DataObservation(Base):
     __tablename__ = "data_observations"
@@ -64,6 +67,7 @@ class DataObservation(Base):
     is_forecast: Mapped[bool] = mapped_column()
 
     flow_rate_m3s: Mapped[float | None] = mapped_column()
+    tide_level_m: Mapped[float | None] = mapped_column()
     wind_speed_kmh: Mapped[float | None] = mapped_column()
     wind_gust_kmh: Mapped[float | None] = mapped_column()
     wave_height_m: Mapped[float | None] = mapped_column()

@@ -1,8 +1,24 @@
+from sqlalchemy import text
+
 from database import Base, SessionLocal, WaterBody, WaterBodyType, engine
 
 
 def seed_database() -> None:
     Base.metadata.create_all(bind=engine)
+    with engine.connect() as conn:
+        conn.execute(
+            text("ALTER TABLE water_bodies ADD COLUMN IF NOT EXISTS tide_min_m FLOAT;")
+        )
+        conn.execute(
+            text("ALTER TABLE water_bodies ADD COLUMN IF NOT EXISTS tide_max_m FLOAT;")
+        )
+        conn.execute(
+            text(
+                "ALTER TABLE data_observations ADD COLUMN IF NOT EXISTS tide_level_m FLOAT;"
+            )
+        )
+        conn.commit()
+
     db = SessionLocal()
 
     try:

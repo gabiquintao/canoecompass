@@ -6,8 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from calibration import calibrate_station_thresholds
 from database import DataObservation, SessionLocal, WaterBody
 from navigability import evaluate_water_body
+from openmeteo_fetcher import fetch_data_for_single_body
 from schemas import HistoryEntry, StationCreate, StationCreated, StationScore
 from utils import detect_water_body_info, get_distance_km, get_location_details
 
@@ -67,10 +69,7 @@ def get_stations_score(db: Session = Depends(get_db)) -> list[StationScore]:
         o.water_body_id: o for o in latest_obs_rows
     }
 
-    return [
-        StationScore(**evaluate_water_body(wb, obs_by_id.get(wb.id)))
-        for wb in water_bodies
-    ]
+    return [evaluate_water_body(wb, obs_by_id.get(wb.id)) for wb in water_bodies]
 
 
 @app.get("/api/stations/{station_id}/history", response_model=list[HistoryEntry])
@@ -121,6 +120,8 @@ def create_station(
     )
     db.add(new_wb)
     db.commit()
+    calibrate_station_thresholds(new_wb, db)
+    fetch_data_for_single_body(new_wb, db)
     db.refresh(new_wb)
 
     return StationCreated(id=new_wb.id, message=f"{dist}, {reg}")

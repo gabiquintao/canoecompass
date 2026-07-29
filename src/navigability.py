@@ -1,28 +1,7 @@
-from enum import Enum
-from typing import Optional, TypedDict
+from typing import Optional
 
 from database import DataObservation, WaterBody, WaterBodyType
-
-
-class NavigabilityScore(Enum):
-    EXCELLENT = "EXCELLENT"
-    GOOD = "GOOD"
-    POOR = "POOR"
-    DANGEROUS = "DANGEROUS"
-    UNKNOWN = "UNKNOWN"
-
-
-class WaterBodyScore(TypedDict):
-    id: int
-    name: str
-    type: str
-    latitude: float
-    longitude: float
-    flow_rate_m3s: float | None
-    wind_speed_kmh: float | None
-    flow_score: str
-    wind_score: str
-    final_score: str
+from schemas import NavigabilityScore, StationScore
 
 
 def evaluate_river(wb: WaterBody, obs: Optional[DataObservation]) -> NavigabilityScore:
@@ -45,6 +24,25 @@ def evaluate_river(wb: WaterBody, obs: Optional[DataObservation]) -> Navigabilit
     return NavigabilityScore.GOOD
 
 
+def evaluate_estuary(
+    wb: WaterBody, obs: Optional[DataObservation]
+) -> NavigabilityScore:
+    if (
+        obs is None
+        or obs.tide_level_m is None
+        or wb.tide_min_m is None
+        or wb.tide_max_m is None
+    ):
+        return NavigabilityScore.UNKNOWN
+
+    if obs.tide_level_m < wb.tide_min_m:
+        return NavigabilityScore.POOR
+    if obs.tide_level_m < wb.tide_max_m:
+        return NavigabilityScore.GOOD
+    else:
+        return NavigabilityScore.EXCELLENT
+
+
 def evaluate_wind(obs: Optional[DataObservation]) -> NavigabilityScore:
     if not obs or obs.wind_speed_kmh is None:
         return NavigabilityScore.UNKNOWN
@@ -61,15 +59,22 @@ def evaluate_wind(obs: Optional[DataObservation]) -> NavigabilityScore:
 
 def evaluate_water_body(
     wb: WaterBody, latest_obs: Optional[DataObservation]
-) -> WaterBodyScore:
+) -> StationScore:
     flow_score = NavigabilityScore.UNKNOWN
+    tide_score = NavigabilityScore.UNKNOWN
     wind_score = evaluate_wind(latest_obs)
 
     if wb.type == WaterBodyType.RIVER:
         flow_score = evaluate_river(wb, latest_obs)
+    elif wb.type in (WaterBodyType.ESTUARY, "LAGOON", "ESTUARY"):
+        tide_score = evaluate_estuary(wb, latest_obs)
 
     final_score = NavigabilityScore.UNKNOWN
-    scores = [s for s in (flow_score, wind_score) if s != NavigabilityScore.UNKNOWN]
+    scores = [
+        s
+        for s in (flow_score, tide_score, wind_score)
+        if s != NavigabilityScore.UNKNOWN
+    ]
     if scores:
         if NavigabilityScore.DANGEROUS in scores:
             final_score = NavigabilityScore.DANGEROUS
@@ -80,15 +85,21 @@ def evaluate_water_body(
         else:
             final_score = NavigabilityScore.GOOD
 
-    return WaterBodyScore(
+    return StationScore(
         id=wb.id,
         name=wb.name,
-        type=wb.type.value,
+        type=wb.type.value if hasattr(wb.type, "value") else str(wb.type),
         latitude=wb.latitude,
         longitude=wb.longitude,
         flow_rate_m3s=latest_obs.flow_rate_m3s if latest_obs else None,
+        tide_level_m=latest_obs.tide_level_m if latest_obs else None,
         wind_speed_kmh=latest_obs.wind_speed_kmh if latest_obs else None,
-        flow_score=flow_score.value,
+        flow_score=(
+            flow_score.value if flow_score != NavigabilityScore.UNKNOWN else None
+        ),
+        tide_score=(
+            tide_score.value if tide_score != NavigabilityScore.UNKNOWN else None
+        ),
         wind_score=wind_score.value,
         final_score=final_score.value,
     )
