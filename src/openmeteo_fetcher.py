@@ -54,15 +54,30 @@ def fetch_data_for_water_bodies() -> None:
 
                 print(f"[{wb.name}] Wind: {wind_speed} km/h | Flow {flow_rate}")
 
-                obs = DataObservation(
-                    water_body_id=wb.id,
-                    date=date.today(),
-                    is_forecast=False,
-                    flow_rate_m3s=flow_rate,
-                    wind_speed_kmh=wind_speed,
+                existing_obs = (
+                    db.query(DataObservation)
+                    .where(
+                        DataObservation.water_body_id == wb.id,
+                        DataObservation.date == date.today(),
+                    )
+                    .first()
                 )
-                db.add(obs)
-                print(f"[{wb.name}] Data saved in the DB.")
+
+                if existing_obs:
+                    existing_obs.flow_rate_m3s = flow_rate
+                    existing_obs.wind_speed_kmh = wind_speed
+                    print(f"[{wb.name}] Data updated in the DB.")
+
+                else:
+                    obs = DataObservation(
+                        water_body_id=wb.id,
+                        date=date.today(),
+                        is_forecast=False,
+                        flow_rate_m3s=flow_rate,
+                        wind_speed_kmh=wind_speed,
+                    )
+                    db.add(obs)
+                    print(f"[{wb.name}] Data saved in the DB.")
 
             except Exception as exc:
                 print(f"[{wb.name}] Failed to fetch data, skipping: {exc}")
