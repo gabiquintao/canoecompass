@@ -5,7 +5,13 @@ from enum import Enum
 
 from dotenv import load_dotenv
 from sqlalchemy import ForeignKey, String, UniqueConstraint, create_engine
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    mapped_column,
+    relationship,
+    sessionmaker,
+)
 
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -51,6 +57,14 @@ class WaterBody(Base):
     tide_min_m: Mapped[float | None] = mapped_column()
     tide_max_m: Mapped[float | None] = mapped_column()
 
+    created_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc)
+    )
+
+    hourly_forecasts: Mapped[list["HourlyForecast"]] = relationship(
+        back_populates="water_body", cascade="all, delete-orphan"
+    )
+
 
 class DataObservation(Base):
     __tablename__ = "data_observations"
@@ -71,6 +85,36 @@ class DataObservation(Base):
     wind_speed_kmh: Mapped[float | None] = mapped_column()
     wind_gust_kmh: Mapped[float | None] = mapped_column()
     wave_height_m: Mapped[float | None] = mapped_column()
+
+    created_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc)
+    )
+
+
+class HourlyForecast(Base):
+    __tablename__ = "hourly_forecasts"
+    __table_args__ = (
+        UniqueConstraint("water_body_id", "timestamp", name="uq_wb_timestamp"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    water_body_id: Mapped[int] = mapped_column(
+        ForeignKey("water_bodies.id"), index=True
+    )
+    timestamp: Mapped[datetime] = mapped_column(index=True)
+    hourly_forecasts: Mapped[int] = mapped_column(
+        ForeignKey("water_bodies.id"), index=True
+    )
+
+    flow_rate_m3s: Mapped[float | None] = mapped_column()
+    tide_level_m: Mapped[float | None] = mapped_column()
+    wind_speed_kmh: Mapped[float | None] = mapped_column()
+    wind_gust_kmh: Mapped[float | None] = mapped_column()
+    wave_height_m: Mapped[float | None] = mapped_column()
+
+    flow_score: Mapped[str | None] = mapped_column()
+    tide_score: Mapped[str | None] = mapped_column()
+    wind_score: Mapped[str | None] = mapped_column()
+    final_score: Mapped[str | None] = mapped_column()
 
     created_at: Mapped[datetime] = mapped_column(
         default=lambda: datetime.now(timezone.utc)

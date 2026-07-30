@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 from typing import Optional
 
@@ -31,6 +31,8 @@ class StationScore(BaseModel):
     flow_rate_m3s: Optional[float] = None
     tide_level_m: Optional[float] = None
     wind_speed_kmh: Optional[float] = None
+    wind_gust_kmh: Optional[float] = None
+    wave_height_m: Optional[float] = None
     flow_score: Optional[str] = None
     tide_score: Optional[str] = None
     wind_score: str
@@ -46,3 +48,19 @@ class HistoryEntry(BaseModel):
 class StationCreated(BaseModel):
     id: int
     message: str
+
+
+class HourlyForecastEntry(BaseModel):
+    timestamp: datetime
+    wind_speed_kmh: Optional[float] = None
+    wind_gust_kmh: Optional[float] = None
+    flow_rate_m3s: Optional[float] = None
+    tide_level_m: Optional[float] = None
+    wave_height_m: Optional[float] = None
+    wind_score: Optional[str] = None
+    tide_score: Optional[str] = None
+    flow_score: Optional[str] = None
+    final_score: str
+
+    class Config:
+        from_attributes = True
