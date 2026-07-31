@@ -101,9 +101,7 @@ class HourlyForecast(Base):
         ForeignKey("water_bodies.id"), index=True
     )
     timestamp: Mapped[datetime] = mapped_column(index=True)
-    hourly_forecasts: Mapped[int] = mapped_column(
-        ForeignKey("water_bodies.id"), index=True
-    )
+    water_body: Mapped["WaterBody"] = relationship(back_populates="hourly_forecasts")
 
     flow_rate_m3s: Mapped[float | None] = mapped_column()
     tide_level_m: Mapped[float | None] = mapped_column()
