@@ -7,6 +7,8 @@ from utils import get_percentile
 
 def calibrate_station_thresholds(wb: WaterBody, db: Session) -> None:
     try:
+        # Wind is evaluated using fixed safety thresholds rather than historical
+        # percentiles because paddling capsizing risk depends on absolute wind speed.
         if wb.type == WaterBodyType.RIVER:
             flood_params = {
                 "latitude": str(wb.latitude),
