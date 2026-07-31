@@ -7,10 +7,19 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from calibration import calibrate_station_thresholds
-from database import DataObservation, SessionLocal, WaterBody
+from database import DataObservation, HourlyForecast, SessionLocal, WaterBody
 from navigability import evaluate_water_body
-from openmeteo_fetcher import fetch_data_for_single_body
-from schemas import HistoryEntry, StationCreate, StationCreated, StationScore
+from openmeteo_fetcher import (
+    fetch_data_for_single_body,
+    fetch_hourly_forecasts_for_single_body,
+)
+from schemas import (
+    HistoryEntry,
+    HourlyForecastEntry,
+    StationCreate,
+    StationCreated,
+    StationScore,
+)
 from utils import detect_water_body_info, get_distance_km, get_location_details
 
 app = FastAPI(title="Canoeing Navigability API")
@@ -46,6 +55,8 @@ def detect_station(lat: float, lon: float) -> dict[str, str]:
 def get_stations_score(db: Session = Depends(get_db)) -> list[StationScore]:
     water_bodies = db.query(WaterBody).all()
 
+    # Aggregate the most recent observation timestamp per station in a subquery and join
+    # the result in a single query rather than querying each station individually.
     latest_date_subq = (
         db.query(
             DataObservation.water_body_id,
@@ -93,6 +104,22 @@ def get_station_history(
     ]
 
 
+@app.get(
+    "/api/stations/{station_id}/forecast",
+    response_model=list[HourlyForecastEntry],
+)
+def get_station_forecast(
+    station_id: int, db: Session = Depends(get_db)
+) -> list[HourlyForecastEntry]:
+    forecasts = (
+        db.query(HourlyForecast)
+        .filter(HourlyForecast.water_body_id == station_id)
+        .order_by(HourlyForecast.timestamp)
+        .all()
+    )
+    return [HourlyForecastEntry.model_validate(f) for f in forecasts]
+
+
 @app.post("/api/stations", response_model=StationCreated, status_code=201)
 def create_station(
     station: StationCreate, db: Session = Depends(get_db)
@@ -122,6 +149,7 @@ def create_station(
     db.commit()
     calibrate_station_thresholds(new_wb, db)
     fetch_data_for_single_body(new_wb, db)
+    fetch_hourly_forecasts_for_single_body(new_wb, db)
     db.refresh(new_wb)
 
     return StationCreated(id=new_wb.id, message=f"{dist}, {reg}")

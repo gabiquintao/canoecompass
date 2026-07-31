@@ -4,17 +4,21 @@ from database import DataObservation, WaterBody, WaterBodyType
 from schemas import NavigabilityScore, StationScore
 
 
-def evaluate_river(wb: WaterBody, obs: Optional[DataObservation]) -> NavigabilityScore:
+def evaluate_river(
+    wb: WaterBody,
+    obs: Optional[DataObservation] = None,
+    flow: Optional[float] = None,
+) -> NavigabilityScore:
+    if obs and obs.flow_rate_m3s is not None:
+        flow = obs.flow_rate_m3s
     if (
-        not obs
-        or obs.flow_rate_m3s is None
+        flow is None
         or wb.flow_min is None
         or wb.flow_max is None
         or wb.flow_danger is None
     ):
         return NavigabilityScore.UNKNOWN
 
-    flow = obs.flow_rate_m3s
     if flow >= wb.flow_danger:
         return NavigabilityScore.DANGEROUS
     if flow < wb.flow_min or flow > wb.flow_max:
@@ -25,29 +29,32 @@ def evaluate_river(wb: WaterBody, obs: Optional[DataObservation]) -> Navigabilit
 
 
 def evaluate_estuary(
-    wb: WaterBody, obs: Optional[DataObservation]
+    wb: WaterBody,
+    obs: Optional[DataObservation] = None,
+    tide: Optional[float] = None,
 ) -> NavigabilityScore:
-    if (
-        obs is None
-        or obs.tide_level_m is None
-        or wb.tide_min_m is None
-        or wb.tide_max_m is None
-    ):
+    if obs and obs.tide_level_m is not None:
+        tide = obs.tide_level_m
+    if tide is None or wb.tide_min_m is None or wb.tide_max_m is None:
         return NavigabilityScore.UNKNOWN
 
-    if obs.tide_level_m < wb.tide_min_m:
+    if tide < wb.tide_min_m:
         return NavigabilityScore.POOR
-    if obs.tide_level_m < wb.tide_max_m:
+    if tide < wb.tide_max_m:
         return NavigabilityScore.GOOD
     else:
         return NavigabilityScore.EXCELLENT
 
 
-def evaluate_wind(obs: Optional[DataObservation]) -> NavigabilityScore:
-    if not obs or obs.wind_speed_kmh is None:
+def evaluate_wind(
+    obs: Optional[DataObservation] = None,
+    wind: Optional[float] = None,
+) -> NavigabilityScore:
+    if obs and obs.wind_speed_kmh is not None:
+        wind = obs.wind_speed_kmh
+    if wind is None:
         return NavigabilityScore.UNKNOWN
 
-    wind = obs.wind_speed_kmh
     if wind > 40.0:
         return NavigabilityScore.DANGEROUS
     if wind > 25.0:
@@ -58,16 +65,29 @@ def evaluate_wind(obs: Optional[DataObservation]) -> NavigabilityScore:
 
 
 def evaluate_water_body(
-    wb: WaterBody, latest_obs: Optional[DataObservation]
+    wb: WaterBody,
+    latest_obs: Optional[DataObservation] = None,
+    flow: Optional[float] = None,
+    wind: Optional[float] = None,
+    tide: Optional[float] = None,
+    wind_gust: Optional[float] = None,
+    wave_height: Optional[float] = None,
 ) -> StationScore:
+    if latest_obs:
+        flow = latest_obs.flow_rate_m3s if flow is None else flow
+        wind = latest_obs.wind_speed_kmh if wind is None else wind
+        tide = latest_obs.tide_level_m if tide is None else tide
+        wind_gust = latest_obs.wind_gust_kmh if wind_gust is None else wind_gust
+        wave_height = latest_obs.wave_height_m if wave_height is None else wave_height
+
     flow_score = NavigabilityScore.UNKNOWN
     tide_score = NavigabilityScore.UNKNOWN
-    wind_score = evaluate_wind(latest_obs)
+    wind_score = evaluate_wind(wind=wind)
 
     if wb.type == WaterBodyType.RIVER:
-        flow_score = evaluate_river(wb, latest_obs)
+        flow_score = evaluate_river(wb, flow=flow)
     elif wb.type in (WaterBodyType.ESTUARY, "LAGOON", "ESTUARY"):
-        tide_score = evaluate_estuary(wb, latest_obs)
+        tide_score = evaluate_estuary(wb, tide=tide)
 
     final_score = NavigabilityScore.UNKNOWN
     scores = [
@@ -91,9 +111,11 @@ def evaluate_water_body(
         type=wb.type.value if hasattr(wb.type, "value") else str(wb.type),
         latitude=wb.latitude,
         longitude=wb.longitude,
-        flow_rate_m3s=latest_obs.flow_rate_m3s if latest_obs else None,
-        tide_level_m=latest_obs.tide_level_m if latest_obs else None,
-        wind_speed_kmh=latest_obs.wind_speed_kmh if latest_obs else None,
+        flow_rate_m3s=flow,
+        tide_level_m=tide,
+        wind_speed_kmh=wind,
+        wind_gust_kmh=wind_gust,
+        wave_height_m=wave_height,
         flow_score=(
             flow_score.value if flow_score != NavigabilityScore.UNKNOWN else None
         ),
