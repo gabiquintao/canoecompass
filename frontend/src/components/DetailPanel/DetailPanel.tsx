@@ -6,9 +6,10 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 
 interface Props {
     station: Station | null;
+    onOpenForecast: () => void;
 }
 
-export function DetailPanel({ station }: Props) {
+export function DetailPanel({ station, onOpenForecast }: Props) {
     const { history, loading } = useStationHistory(station?.id ?? null);
 
     if (!station) {
@@ -33,6 +34,8 @@ export function DetailPanel({ station }: Props) {
                         </div>
                     </div>
                     <ScoreBadge score={station.final_score} size="lg" />
+
+                    <button onClick={onOpenForecast}>View full forecast</button>
                 </div>
 
                 <SectionTitle>Measurements</SectionTitle>
@@ -210,15 +213,8 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     return <div className={styles.sectionTitle}>{children}</div>;
 }
 
-function InfoTip({
-    text,
-    align = "left",
-}: {
-    text: string;
-    align?: "left" | "right";
-}) {
-    const tooltipClass =
-        align === "right" ? styles.tooltipRight : styles.tooltipLeft;
+function InfoTip({ text, align = "left" }: { text: string; align?: "left" | "right" }) {
+    const tooltipClass = align === "right" ? styles.tooltipRight : styles.tooltipLeft;
     return (
         <span className={styles.infoWrapper}>
             <span className={styles.infoIcon} aria-label="Info">
@@ -238,10 +234,7 @@ function InfoTip({
                     <line x1="12" y1="8" x2="12.01" y2="8" />
                 </svg>
             </span>
-            <span
-                className={`${styles.customTooltip} ${tooltipClass}`}
-                role="tooltip"
-            >
+            <span className={`${styles.customTooltip} ${tooltipClass}`} role="tooltip">
                 {text}
             </span>
         </span>

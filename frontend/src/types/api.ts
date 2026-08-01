@@ -10,6 +10,8 @@ export interface Station {
     flow_rate_m3s: number | null;
     tide_level_m?: number | null;
     wind_speed_kmh: number | null;
+    wid_gust_kmh?: number | null;
+    wave_height?: number | null;
     flow_score?: NavigabilityScore | null;
     tide_score?: NavigabilityScore | null;
     wind_score: NavigabilityScore;
@@ -20,4 +22,17 @@ export interface StationHistoryEntry {
     date: string;
     flow_rate: number | null;
     wind_speed: number | null;
+}
+
+export interface HourlyForecastEntry {
+    timestamp: string;
+    wind_speed_kmh: number | null;
+    wind_gust_kmh: number | null;
+    flow_rate_m3s: number | null;
+    tide_level_m: number | null;
+    wave_height_m: number | null;
+    wind_score: NavigabilityScore | null;
+    tide_score: NavigabilityScore | null;
+    flow_score: NavigabilityScore | null;
+    final_score: NavigabilityScore;
 }

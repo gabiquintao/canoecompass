@@ -5,11 +5,13 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import { StationMap } from "./components/StationMap/StationMap";
 import { DetailPanel } from "./components/DetailPanel/DetailPanel";
 import styles from "./App.module.css";
+import { ForecastModal } from "./components/ForecastModal/ForecastModal";
 
 export default function App() {
     const { stations, loading, error, lastUpdated, refetch } = useStations();
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isForecastModalOpen, setIsForecastModalOpen] = useState(false);
 
     const selectedStation = stations.find((s) => s.id === selectedId) ?? null;
 
@@ -41,8 +43,17 @@ export default function App() {
                     onSelect={setSelectedId}
                     onStationAdded={refetch}
                 />
-                <DetailPanel station={selectedStation} />
+                <DetailPanel
+                    station={selectedStation}
+                    onOpenForecast={() => setIsForecastModalOpen(true)}
+                />
             </main>
+
+            <ForecastModal
+                isOpen={isForecastModalOpen}
+                onClose={() => setIsForecastModalOpen(false)}
+                station={selectedStation}
+            />
         </div>
     );
 }

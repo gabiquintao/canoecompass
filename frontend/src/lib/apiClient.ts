@@ -1,4 +1,4 @@
-import type { Station, StationHistoryEntry } from "../types/api";
+import type { HourlyForecastEntry, Station, StationHistoryEntry } from "../types/api";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -30,4 +30,7 @@ export const apiClient = {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
         }),
+
+    getStationForecast: (stationId: number): Promise<HourlyForecastEntry[]> =>
+        request<HourlyForecastEntry[]>(`/api/stations/${stationId}/forecast`),
 };
