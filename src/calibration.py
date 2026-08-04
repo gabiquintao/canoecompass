@@ -29,7 +29,11 @@ def calibrate_station_thresholds(wb: WaterBody, db: Session) -> None:
             wb.flow_max = get_percentile(flows, 80)
             wb.flow_danger = get_percentile(flows, 95)
 
-        if wb.type == WaterBodyType.ESTUARY:
+        if wb.type in (
+            WaterBodyType.ESTUARY,
+            WaterBodyType.LAGOON,
+            WaterBodyType.COASTAL,
+        ):
             sea_level_params = {
                 "latitude": str(wb.latitude),
                 "longitude": str(wb.longitude),
@@ -47,8 +51,8 @@ def calibrate_station_thresholds(wb: WaterBody, db: Session) -> None:
                 data.get("hourly", {}).get("sea_level_height_msl") or []
             )
 
-            wb.tide_min_m = get_percentile(sea_levels, 15)
-            wb.tide_max_m = get_percentile(sea_levels, 80)
+            wb.tide_min_m = get_percentile(sea_levels, 50)
+            wb.tide_max_m = get_percentile(sea_levels, 92)
 
         db.commit()
         db.refresh(wb)

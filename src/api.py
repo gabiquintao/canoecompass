@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from typing import Generator
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -80,7 +81,42 @@ def get_stations_score(db: Session = Depends(get_db)) -> list[StationScore]:
         o.water_body_id: o for o in latest_obs_rows
     }
 
-    return [evaluate_water_body(wb, obs_by_id.get(wb.id)) for wb in water_bodies]
+    now_hour = datetime.now().replace(minute=0, second=0, microsecond=0)
+    hourly_rows = (
+        db.query(HourlyForecast)
+        .filter(HourlyForecast.timestamp >= now_hour)
+        .order_by(HourlyForecast.timestamp)
+        .all()
+    )
+    hourly_by_id: dict[int, HourlyForecast] = {}
+    for h in hourly_rows:
+        if h.water_body_id not in hourly_by_id:
+            hourly_by_id[h.water_body_id] = h
+
+    result: list[StationScore] = []
+    for wb in water_bodies:
+        hf = hourly_by_id.get(wb.id)
+        obs = obs_by_id.get(wb.id)
+
+        def get_val(attr: str) -> float | None:
+            val = getattr(hf, attr, None) if hf else None
+            return (
+                val if val is not None else (getattr(obs, attr, None) if obs else None)
+            )
+
+        result.append(
+            evaluate_water_body(
+                wb,
+                latest_obs=obs,
+                flow=get_val("flow_rate_m3s"),
+                tide=get_val("tide_level_m"),
+                wind=get_val("wind_speed_kmh"),
+                wind_gust=get_val("wind_gust_kmh"),
+                wave_height=get_val("wave_height_m"),
+            )
+        )
+
+    return result
 
 
 @app.get("/api/stations/{station_id}/history", response_model=list[HistoryEntry])
@@ -99,6 +135,9 @@ def get_station_history(
             date=obs.date,
             flow_rate=obs.flow_rate_m3s,
             wind_speed=obs.wind_speed_kmh,
+            tide_level=obs.tide_level_m,
+            wind_gust=obs.wind_gust_kmh,
+            wave_height=obs.wave_height_m,
         )
         for obs in observations
     ]
@@ -111,12 +150,17 @@ def get_station_history(
 def get_station_forecast(
     station_id: int, db: Session = Depends(get_db)
 ) -> list[HourlyForecastEntry]:
+    today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     forecasts = (
         db.query(HourlyForecast)
-        .filter(HourlyForecast.water_body_id == station_id)
+        .filter(
+            HourlyForecast.water_body_id == station_id,
+            HourlyForecast.timestamp >= today_start,
+        )
         .order_by(HourlyForecast.timestamp)
         .all()
     )
+
     return [HourlyForecastEntry.model_validate(f) for f in forecasts]
 
 

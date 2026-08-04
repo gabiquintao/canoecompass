@@ -46,8 +46,11 @@ class StationScore(BaseModel):
 
 class HistoryEntry(BaseModel):
     date: date
-    flow_rate: Optional[float]
-    wind_speed: Optional[float]
+    flow_rate: Optional[float] = None
+    wind_speed: Optional[float] = None
+    tide_level: Optional[float] = None
+    wind_gust: Optional[float] = None
+    wave_height: Optional[float] = None
 
 
 class StationCreated(BaseModel):
