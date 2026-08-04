@@ -37,6 +37,11 @@ class StationScore(BaseModel):
     tide_score: Optional[str] = None
     wind_score: str
     final_score: str
+    flow_min: Optional[float] = None
+    flow_max: Optional[float] = None
+    flow_danger: Optional[float] = None
+    tide_min_m: Optional[float] = None
+    tide_max_m: Optional[float] = None
 
 
 class HistoryEntry(BaseModel):

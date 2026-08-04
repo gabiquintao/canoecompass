@@ -86,7 +86,7 @@ def evaluate_water_body(
 
     if wb.type == WaterBodyType.RIVER:
         flow_score = evaluate_river(wb, flow=flow)
-    elif wb.type in (WaterBodyType.ESTUARY, "LAGOON", "ESTUARY"):
+    elif wb.type in (WaterBodyType.ESTUARY, WaterBodyType.LAGOON):
         tide_score = evaluate_estuary(wb, tide=tide)
 
     final_score = NavigabilityScore.UNKNOWN
@@ -124,4 +124,9 @@ def evaluate_water_body(
         ),
         wind_score=wind_score.value,
         final_score=final_score.value,
+        flow_min=wb.flow_min,
+        flow_max=wb.flow_max,
+        flow_danger=wb.flow_danger,
+        tide_min_m=wb.tide_min_m,
+        tide_max_m=wb.tide_max_m,
     )
