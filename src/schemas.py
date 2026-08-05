@@ -72,3 +72,24 @@ class HourlyForecastEntry(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class TidalPeak(BaseModel):
+    time: str
+    level: float
+
+
+class PaddlingWindow(BaseModel):
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    peak_hour: HourlyForecastEntry
+
+class DailyMarineSummary(BaseModel):
+    high_tides: list[TidalPeak]
+    low_tides: list[TidalPeak]
+    best_paddling_window: Optional[PaddlingWindow] = None
+
+
+class ForecastResponse(BaseModel):
+    hourly: list[HourlyForecastEntry]
+    daily_summaries: dict[str, DailyMarineSummary]
