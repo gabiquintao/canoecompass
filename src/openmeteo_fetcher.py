@@ -19,6 +19,7 @@ def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
             "latitude": str(wb.latitude),
             "longitude": str(wb.longitude),
             "current": "wind_speed_10m,wind_gusts_10m",
+            "timezone": "auto",
         }
 
         wind_response = requests.get(
@@ -42,6 +43,7 @@ def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
                 "latitude": str(wb.latitude),
                 "longitude": str(wb.longitude),
                 "daily": "river_discharge",
+                "timezone": "auto",
             }
 
             flow_response = requests.get(
@@ -61,6 +63,7 @@ def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
                 "latitude": str(wb.latitude),
                 "longitude": str(wb.longitude),
                 "hourly": "sea_level_height_msl,wave_height",
+                "timezone": "auto",
             }
 
             sea_level_response = requests.get(
@@ -145,6 +148,7 @@ def fetch_hourly_forecasts_for_single_body(wb: WaterBody, db: Session) -> None:
             "longitude": str(wb.longitude),
             "hourly": "wind_speed_10m,wind_gusts_10m",
             "forecast_days": 7,
+            "timezone": "auto",
         }
         wind_response = requests.get(
             "https://api.open-meteo.com/v1/forecast", params=wind_params
@@ -170,6 +174,7 @@ def fetch_hourly_forecasts_for_single_body(wb: WaterBody, db: Session) -> None:
                 "longitude": str(wb.longitude),
                 "daily": "river_discharge",
                 "forecast_days": 7,
+                "timezone": "auto",
             }
             flow_response = requests.get(
                 "https://flood-api.open-meteo.com/v1/flood", params=flow_params
@@ -189,6 +194,7 @@ def fetch_hourly_forecasts_for_single_body(wb: WaterBody, db: Session) -> None:
                 "longitude": str(wb.longitude),
                 "hourly": "sea_level_height_msl,wave_height",
                 "forecast_days": 7,
+                "timezone": "auto",
             }
             sea_response = requests.get(
                 "https://marine-api.open-meteo.com/v1/marine", params=sea_params
