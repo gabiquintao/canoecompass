@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 from datetime import datetime
 from typing import Generator
 
@@ -15,12 +16,15 @@ from openmeteo_fetcher import (
     fetch_hourly_forecasts_for_single_body,
 )
 from schemas import (
+    DailyMarineSummary,
+    ForecastResponse,
     HistoryEntry,
     HourlyForecastEntry,
     StationCreate,
     StationCreated,
     StationScore,
 )
+from marine import find_best_paddling_window, find_tidal_peaks
 from utils import detect_water_body_info, get_distance_km, get_location_details
 
 app = FastAPI(title="Canoeing Navigability API")
@@ -145,11 +149,17 @@ def get_station_history(
 
 @app.get(
     "/api/stations/{station_id}/forecast",
-    response_model=list[HourlyForecastEntry],
+    response_model=ForecastResponse,
 )
 def get_station_forecast(
     station_id: int, db: Session = Depends(get_db)
-) -> list[HourlyForecastEntry]:
+) -> ForecastResponse:
+    wb = db.query(WaterBody).filter(WaterBody.id == station_id).first()
+    if not wb:
+        raise HTTPException(status_code=404, detail="Station not found")
+
+    is_tidal = wb.type in ["ESTUARY", "LAGOON", "COASTAL"]
+
     today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     forecasts = (
         db.query(HourlyForecast)
@@ -161,7 +171,25 @@ def get_station_forecast(
         .all()
     )
 
-    return [HourlyForecastEntry.model_validate(f) for f in forecasts]
+    hourly_entries = [HourlyForecastEntry.model_validate(f) for f in forecasts]
+
+    daily_summaries: dict[str, DailyMarineSummary] = {}
+    grouped_by_day: defaultdict[str, list[HourlyForecastEntry]] = defaultdict(list)
+    for entry in hourly_entries:
+        day_str = entry.timestamp.strftime("%Y-%m-%d")
+        grouped_by_day[day_str].append(entry)
+
+    for day_str, hours in grouped_by_day.items():
+        peaks = find_tidal_peaks(hours)
+        best_window = find_best_paddling_window(hours, is_tidal=is_tidal)
+
+        daily_summaries[day_str] = DailyMarineSummary(
+            high_tides=peaks["highs"],
+            low_tides=peaks["lows"],
+            best_paddling_window=best_window,
+        )
+
+    return ForecastResponse(hourly=hourly_entries, daily_summaries=daily_summaries)
 
 
 @app.post("/api/stations", response_model=StationCreated, status_code=201)
