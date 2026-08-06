@@ -12,7 +12,7 @@ interface Props {
 
 export function AddStationModal({ lat, lng, onClose, onSuccess }: Props) {
     const [name, setName] = useState("");
-    const [type, setType] = useState("");
+    const [type, setType] = useState("RIVER");
     const [saving, setSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

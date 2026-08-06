@@ -84,6 +84,7 @@ class PaddlingWindow(BaseModel):
     end_time: Optional[str] = None
     peak_hour: HourlyForecastEntry
 
+
 class DailyMarineSummary(BaseModel):
     high_tides: list[TidalPeak]
     low_tides: list[TidalPeak]

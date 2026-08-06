@@ -6,3 +6,4 @@ GeoAlchemy2
 fastapi
 uvicorn[standard]
 apscheduler
+slowapi

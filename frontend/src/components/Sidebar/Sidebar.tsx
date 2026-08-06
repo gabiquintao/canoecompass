@@ -9,6 +9,7 @@ interface Props {
     searchQuery: string;
     onSearch: (query: string) => void;
     searchRef?: React.RefObject<HTMLInputElement | null>;
+    error?: string | null;
 }
 
 export function Sidebar({
@@ -18,6 +19,7 @@ export function Sidebar({
     searchQuery,
     onSearch,
     searchRef,
+    error,
 }: Props) {
     return (
         <aside className={styles.panel} aria-label="Station list">
@@ -58,6 +60,15 @@ export function Sidebar({
                     </button>
                 )}
             </div>
+
+            {error && (
+                <div className={styles.errorBanner}>
+                    <p>
+                        <strong>Couldn't load stations</strong>
+                    </p>
+                    <p>{error}</p>
+                </div>
+            )}
 
             <div className={styles.list} role="listbox" aria-label="Stations">
                 {stations.length === 0 && (

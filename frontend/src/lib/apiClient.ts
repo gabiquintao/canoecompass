@@ -5,7 +5,20 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const res = await fetch(`${BASE_URL}${path}`, options);
     if (!res.ok) {
-        throw new Error(`HTTP ${res.status} — ${res.statusText}`);
+        let errorMsg = res.statusText;
+        try {
+            const body = await res.json();
+            if (body.detail) {
+                if (typeof body.detail === "string") {
+                    errorMsg = body.detail;
+                } else if (Array.isArray(body.detail) && body.detail[0]?.msg) {
+                    errorMsg = body.detail[0].msg;
+                }
+            }
+        } catch {
+            // Ignore
+        }
+        throw new Error(`HTTP ${res.status} — ${errorMsg}`);
     }
     return res.json() as Promise<T>;
 }

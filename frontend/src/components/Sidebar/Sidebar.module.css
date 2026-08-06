@@ -124,3 +124,19 @@
     color: var(--text-xmuted);
     font-size: 12px;
 }
+
+.errorBanner {
+    padding: 12px;
+    background: rgba(220, 38, 38, 0.1);
+    border-bottom: 1px solid rgba(220, 38, 38, 0.2);
+    color: #f87171;
+    font-size: 12px;
+}
+
+.errorBanner p {
+    margin: 0;
+}
+
+.errorBanner p:not(:last-child) {
+    margin-bottom: 4px;
+}

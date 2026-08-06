@@ -103,6 +103,7 @@ export default function App() {
                         searchQuery={searchQuery}
                         onSearch={setSearchQuery}
                         searchRef={searchRef}
+                        error={error}
                     />
                 )}
                 {showDetail && selectedStation && (

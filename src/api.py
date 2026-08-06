@@ -5,8 +5,12 @@ from datetime import datetime, timedelta
 from typing import AsyncGenerator, Generator
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -50,7 +54,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print("Background weather scheduler shut down.")
 
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="Canoeing Navigability API", lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 cors_origins = [
     origin.strip()
@@ -75,7 +83,10 @@ def get_db() -> Generator[Session, None, None]:
 
 
 @app.get("/api/stations/score", response_model=list[StationScore])
-def get_stations_score(db: Session = Depends(get_db)) -> list[StationScore]:
+@limiter.limit("60/minute")
+def get_stations_score(
+    request: Request, db: Session = Depends(get_db)
+) -> list[StationScore]:
     water_bodies = db.query(WaterBody).all()
 
     # Aggregate the most recent observation timestamp per station in a subquery and join
@@ -142,8 +153,9 @@ def get_stations_score(db: Session = Depends(get_db)) -> list[StationScore]:
 
 
 @app.get("/api/stations/{station_id}/history", response_model=list[HistoryEntry])
+@limiter.limit("60/minute")
 def get_station_history(
-    station_id: int, db: Session = Depends(get_db)
+    request: Request, station_id: int, db: Session = Depends(get_db)
 ) -> list[HistoryEntry]:
     seven_days_ago = datetime.now().date() - timedelta(days=7)
     observations = (
@@ -173,8 +185,9 @@ def get_station_history(
     "/api/stations/{station_id}/forecast",
     response_model=ForecastResponse,
 )
+@limiter.limit("60/minute")
 def get_station_forecast(
-    station_id: int, db: Session = Depends(get_db)
+    request: Request, station_id: int, db: Session = Depends(get_db)
 ) -> ForecastResponse:
     wb = db.query(WaterBody).filter(WaterBody.id == station_id).first()
     if not wb:
@@ -215,8 +228,9 @@ def get_station_forecast(
 
 
 @app.post("/api/stations", response_model=StationCreated, status_code=201)
+@limiter.limit("5/minute")
 def create_station(
-    station: StationCreate, db: Session = Depends(get_db)
+    request: Request, station: StationCreate, db: Session = Depends(get_db)
 ) -> StationCreated:
     existing_bodies = db.query(WaterBody).all()
     for wb in existing_bodies:

@@ -221,7 +221,7 @@ function ExtraMetrics({ station }: { station: Station }) {
 }
 
 export function DetailPanel({ station, onOpenForecast, onBack }: Props) {
-    const { history, loading: historyLoading } = useStationHistory(station.id);
+    const { history, loading: historyLoading, error: historyError } = useStationHistory(station.id);
     const { forecasts } = useStationForecast(station.id);
     const isTidal =
         station.type === "ESTUARY" || station.type === "LAGOON" || station.type === "COASTAL";
@@ -397,7 +397,13 @@ export function DetailPanel({ station, onOpenForecast, onBack }: Props) {
 
                 {historyLoading && <p className={styles.loadingText}>Loading history…</p>}
 
-                {!historyLoading && history.length > 0 && (
+                {historyError && (
+                    <p className={styles.errorText} style={{ marginTop: 12 }}>
+                        Couldn't load the history. {historyError}
+                    </p>
+                )}
+
+                {!historyLoading && !historyError && history.length > 0 && (
                     <div className={styles.chart}>
                         <div className={styles.chartLabel}>
                             <span>7-day history</span>
