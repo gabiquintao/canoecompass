@@ -1,0 +1,39 @@
+.wrapper {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+    cursor: help;
+    vertical-align: middle;
+}
+
+.symbol {
+    color: var(--text-xmuted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+}
+
+.wrapper:hover .symbol {
+    color: var(--text);
+}
+
+.card {
+    position: fixed;
+    background: var(--surface);
+    border: 1px solid var(--border-bright, hsl(210, 15%, 40%));
+    border-radius: 6px;
+    padding: 8px 11px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    width: max-content;
+    max-width: 250px;
+    font-size: 11px;
+    line-height: 1.4;
+    font-weight: 400;
+    color: var(--text);
+    pointer-events: none;
+    z-index: 99999;
+    white-space: normal;
+    text-align: left;
+    font-family: var(--font);
+}

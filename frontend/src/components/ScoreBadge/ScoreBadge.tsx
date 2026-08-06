@@ -4,20 +4,16 @@ import styles from "./ScoreBadge.module.css";
 
 interface Props {
     score?: NavigabilityScore | null;
-    size?: "sm" | "lg";
+    variant?: "badge" | "dot";
 }
 
-export function ScoreBadge({ score, size = "sm" }: Props) {
-    const meta = SCORE_META[(score as NavigabilityScore) ?? "UNKNOWN"] ?? SCORE_META.UNKNOWN;
+export function ScoreBadge({ score, variant = "badge" }: Props) {
+    const meta = SCORE_META[score ?? "UNKNOWN"] ?? SCORE_META.UNKNOWN;
+    if (variant === "dot") {
+        return <span className={styles.dot} style={{ background: meta.color }} />;
+    }
     return (
-        <span
-            className={`${styles.badge} ${styles[size]}`}
-            style={{
-                color: meta.color,
-                background: meta.bg,
-                borderColor: meta.border,
-            }}
-        >
+        <span className={styles.badge} style={{ color: meta.color, borderColor: meta.color }}>
             {meta.label}
         </span>
     );

@@ -10,89 +10,87 @@ const PORTUGAL_BOUNDS: [[number, number], [number, number]] = [
     [42.2, -6.1],
 ];
 
+function MapClickListener({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
+    useMapEvents({ click: (e) => onMapClick(e.latlng.lat, e.latlng.lng) });
+    return null;
+}
+
+function distKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 interface Props {
     stations: Station[];
     selectedId: number | null;
     onSelect: (id: number) => void;
     onStationAdded?: () => void;
+    isDark: boolean;
 }
 
-function MapClickListener({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
-    useMapEvents({
-        click(e) {
-            onMapClick(e.latlng.lat, e.latlng.lng);
-        },
-    });
-    return null;
-}
-
-function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((lat1 * Math.PI) / 180) *
-            Math.cos((lat2 * Math.PI) / 180) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-}
-
-export function StationMap({ stations, selectedId, onSelect, onStationAdded }: Props) {
-    const [newSpotCoords, setNewSpotCoords] = useState<{ lat: number; lng: number } | null>(null);
+export function StationMap({ stations, selectedId, onSelect, onStationAdded, isDark }: Props) {
+    const [newCoords, setNewCoords] = useState<{ lat: number; lng: number } | null>(null);
 
     const handleMapClick = (lat: number, lng: number) => {
-        const MIN_DISTANCE_KM = 0.5;
-        const nearbyStation = stations.find(
-            (s) => getDistanceKm(lat, lng, s.latitude, s.longitude) < MIN_DISTANCE_KM
-        );
-
-        if (nearbyStation) {
-            onSelect(nearbyStation.id);
-            setNewSpotCoords(null);
+        const nearby = stations.find((s) => distKm(lat, lng, s.latitude, s.longitude) < 0.5);
+        if (nearby) {
+            onSelect(nearby.id);
+            setNewCoords(null);
             return;
         }
-
-        setNewSpotCoords({ lat, lng });
+        setNewCoords({ lat, lng });
     };
 
+    const tileUrl = isDark
+        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+
     return (
-        <section className={styles.section} aria-label="Map">
-            {newSpotCoords && (
+        <section className={styles.section} aria-label="Station map">
+            {newCoords && (
                 <AddStationModal
-                    lat={newSpotCoords.lat}
-                    lng={newSpotCoords.lng}
-                    onClose={() => setNewSpotCoords(null)}
+                    lat={newCoords.lat}
+                    lng={newCoords.lng}
+                    onClose={() => setNewCoords(null)}
                     onSuccess={() => {
                         onStationAdded?.();
+                        setNewCoords(null);
                     }}
                 />
             )}
+
             <MapContainer bounds={PORTUGAL_BOUNDS} className={styles.map}>
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-
+                <TileLayer key={tileUrl} url={tileUrl} />
                 <MapClickListener onMapClick={handleMapClick} />
-
-                {stations.map((station) => {
-                    const isSelected = station.id === selectedId;
-                    const color = SCORE_META[station.final_score]?.color ?? "#6b7280";
+                {stations.map((s) => {
+                    const sel = s.id === selectedId;
+                    const color = SCORE_META[s.final_score]?.color ?? "hsl(220,8%,56%)";
+                    const { label } = SCORE_META[s.final_score] ?? SCORE_META.UNKNOWN;
 
                     return (
                         <CircleMarker
-                            key={station.id}
-                            center={[station.latitude, station.longitude]}
+                            key={s.id}
+                            center={[s.latitude, s.longitude]}
+                            radius={sel ? 9 : 6}
                             pathOptions={{
-                                fillColor: color,
-                                color: isSelected ? "#0f172a" : "#ffffff",
-                                weight: isSelected ? 2.5 : 1.5,
+                                fillColor: sel ? "#ffffff" : color,
+                                color: sel ? color : "#ffffff",
+                                weight: sel ? 2.5 : 1.5,
                                 fillOpacity: 1,
                             }}
-                            eventHandlers={{ click: () => onSelect(station.id) }}
+                            eventHandlers={{ click: () => onSelect(s.id) }}
                         >
                             <Tooltip>
-                                <strong>{station.name}</strong>
+                                <strong>{s.name}</strong>
+                                <br />
+                                <span style={{ color, fontSize: 10 }}>{label}</span>
                             </Tooltip>
                         </CircleMarker>
                     );
