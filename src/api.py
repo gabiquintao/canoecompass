@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from calibration import calibrate_station_thresholds
 from database import DataObservation, HourlyForecast, SessionLocal, WaterBody
-from marine import find_best_paddling_window, find_tidal_peaks
+from marine import find_all_tidal_peaks, find_best_paddling_window
 from navigability import evaluate_water_body
 from openmeteo_fetcher import (
     fetch_data_for_single_body,
@@ -214,13 +214,16 @@ def get_station_forecast(
         day_str = entry.timestamp.strftime("%Y-%m-%d")
         grouped_by_day[day_str].append(entry)
 
+    # Calculate all peaks seamlessly across the entire 168-hour array
+    all_peaks = find_all_tidal_peaks(hourly_entries)
+
     for day_str, hours in grouped_by_day.items():
-        peaks = find_tidal_peaks(hours)
+        peaks_for_day = all_peaks.get(day_str, {"highs": [], "lows": []})
         best_window = find_best_paddling_window(hours, is_tidal=is_tidal)
 
         daily_summaries[day_str] = DailyMarineSummary(
-            high_tides=peaks["highs"],
-            low_tides=peaks["lows"],
+            high_tides=peaks_for_day["highs"],
+            low_tides=peaks_for_day["lows"],
             best_paddling_window=best_window,
         )
 

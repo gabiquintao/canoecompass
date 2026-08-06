@@ -1,61 +1,52 @@
+from collections import defaultdict
 from typing import Optional
 
 from schemas import HourlyForecastEntry, PaddlingWindow, TidalPeak
 
 
-# Finds up to 2 High Tides and 2 Low Tides for a given day's hourly forecast.
+# Finds up to 2 High Tides and 2 Low Tides for each day across a continuous hourly forecast.
 # A high tide peak is where the water rose before this hour and ebbing starts after.
 # A low tide peak is where the water fell before this hour and flooding starts after.
-def find_tidal_peaks(hours: list[HourlyForecastEntry]) -> dict[str, list[TidalPeak]]:
-    highs: list[TidalPeak] = []
-    lows: list[TidalPeak] = []
+def find_all_tidal_peaks(
+    hours: list[HourlyForecastEntry],
+) -> dict[str, dict[str, list[TidalPeak]]]:
+    peaks_by_day: dict[str, dict[str, list[TidalPeak]]] = defaultdict(
+        lambda: {"highs": [], "lows": []}
+    )
     if not hours:
-        return {"highs": highs, "lows": lows}
+        return dict(peaks_by_day)
 
-    for i in range(1, len(hours) - 1):
+    for i in range(len(hours)):
         curr = hours[i].tide_level_m
-        prev_h = hours[i - 1].tide_level_m
-        next_h = hours[i + 1].tide_level_m
-
-        if curr is None or prev_h is None or next_h is None:
+        if curr is None:
             continue
 
+        prev_h = hours[i - 1].tide_level_m if i > 0 else float("-inf")
+        next_h = hours[i + 1].tide_level_m if i < len(hours) - 1 else float("-inf")
+
+        prev_l = hours[i - 1].tide_level_m if i > 0 else float("inf")
+        next_l = hours[i + 1].tide_level_m if i < len(hours) - 1 else float("inf")
+
+        if prev_h is None:
+            prev_h = float("-inf")
+        if next_h is None:
+            next_h = float("-inf")
+        if prev_l is None:
+            prev_l = float("inf")
+        if next_l is None:
+            next_l = float("inf")
+
+        day_str = hours[i].timestamp.strftime("%Y-%m-%d")
         time = hours[i].timestamp.strftime("%H:%M")
 
         if curr > prev_h and curr >= next_h:
-            highs.append(TidalPeak(time=time, level=curr))
-        elif curr < prev_h and curr <= next_h:
-            lows.append(TidalPeak(time=time, level=curr))
+            if len(peaks_by_day[day_str]["highs"]) < 2:
+                peaks_by_day[day_str]["highs"].append(TidalPeak(time=time, level=curr))
+        elif curr < prev_l and curr <= next_l:
+            if len(peaks_by_day[day_str]["lows"]) < 2:
+                peaks_by_day[day_str]["lows"].append(TidalPeak(time=time, level=curr))
 
-    if not highs:
-        max_hr = max(
-            hours,
-            key=lambda h: (
-                h.tide_level_m if h.tide_level_m is not None else float("-inf")
-            ),
-        )
-        if max_hr.tide_level_m is not None:
-            highs.append(
-                TidalPeak(
-                    time=max_hr.timestamp.strftime("%H:%M"), level=max_hr.tide_level_m
-                )
-            )
-
-    if not lows:
-        min_hr = min(
-            hours,
-            key=lambda h: (
-                h.tide_level_m if h.tide_level_m is not None else float("inf")
-            ),
-        )
-        if min_hr.tide_level_m is not None:
-            lows.append(
-                TidalPeak(
-                    time=min_hr.timestamp.strftime("%H:%M"), level=min_hr.tide_level_m
-                )
-            )
-
-    return {"highs": highs[:2], "lows": lows[:2]}
+    return dict(peaks_by_day)
 
 
 def find_best_paddling_window(
