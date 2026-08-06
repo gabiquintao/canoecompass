@@ -12,7 +12,7 @@ interface Props {
 
 export function AddStationModal({ lat, lng, onClose, onSuccess }: Props) {
     const [name, setName] = useState("");
-    const [type, setType] = useState("RIVER");
+    const [type, setType] = useState("");
     const [saving, setSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -24,27 +24,6 @@ export function AddStationModal({ lat, lng, onClose, onSuccess }: Props) {
             L.DomEvent.disableScrollPropagation(modalRef.current);
         }
     }, []);
-
-    useEffect(() => {
-        let cancelled = false;
-
-        async function detectInfo() {
-            try {
-                const info = await apiClient.detectWaterBody(lat, lng);
-                if (!cancelled && info.type) {
-                    setType(info.type);
-                }
-            } catch {
-                // Silently ignore — auto-detection is best-effort
-            }
-        }
-
-        detectInfo();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [lat, lng]);
 
     const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -82,17 +61,13 @@ export function AddStationModal({ lat, lng, onClose, onSuccess }: Props) {
             aria-labelledby="modal-title"
         >
             <h3 id="modal-title" className={styles.title}>
-                Add Canoeing Spot
+                Add Spot
             </h3>
             <p className={styles.coordinates}>
                 {lat.toFixed(4)}° N, {lng.toFixed(4)}° W
             </p>
 
-            {errorMessage && (
-                <div style={{ color: "#dc2626", fontSize: "0.75rem", marginBottom: "0.5rem" }}>
-                    {errorMessage}
-                </div>
-            )}
+            {errorMessage && <p className={styles.error}>{errorMessage}</p>}
 
             <form onSubmit={handleSubmit} className={styles.form}>
                 <div className={styles.field}>
@@ -140,7 +115,7 @@ export function AddStationModal({ lat, lng, onClose, onSuccess }: Props) {
                         Cancel
                     </button>
                     <button type="submit" className={styles.submitButton} disabled={saving}>
-                        {saving ? "Saving..." : "Save Spot"}
+                        {saving ? "Saving" : "Save Spot"}
                     </button>
                 </div>
             </form>

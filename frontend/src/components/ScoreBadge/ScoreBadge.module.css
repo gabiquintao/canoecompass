@@ -2,18 +2,19 @@
     display: inline-block;
     border: 1px solid;
     border-radius: 3px;
+    font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
+    padding: 1px 6px;
     white-space: nowrap;
+    background: transparent;
 }
 
-.sm {
-    font-size: 10px;
-    padding: 1px 5px;
-}
-
-.lg {
-    font-size: 13px;
-    padding: 4px 12px;
+.dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }

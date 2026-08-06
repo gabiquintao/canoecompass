@@ -1,7 +1,8 @@
 .section {
-    flex: 1;
+    position: absolute;
+    inset: 0;
     overflow: hidden;
-    position: relative;
+    isolation: isolate; /* Contains Leaflet's z-indexes (200-700) within the map stacking context */
 }
 
 .map {
@@ -10,14 +11,20 @@
 }
 
 :global(.leaflet-tooltip) {
-    background: rgba(255, 255, 255, 0.97) !important;
-    border: 1px solid #cbd5e1 !important;
-    color: #0f172a !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
     font-size: 11px !important;
-    padding: 4px 8px !important;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12) !important;
-    border-radius: 3px !important;
+    font-family: var(--font) !important;
+    padding: 5px 9px !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 4px !important;
 }
+
 :global(.leaflet-tooltip::before) {
     display: none !important;
+}
+
+:global(.leaflet-interactive:focus) {
+    outline: none;
 }
