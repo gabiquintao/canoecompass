@@ -1,6 +1,6 @@
 import type { Station } from "../../types/api";
-import { SCORE_META } from "../../constants/scores";
 import styles from "./Sidebar.module.css";
+import { ScoreBadge } from "../ScoreBadge/ScoreBadge";
 
 interface Props {
     stations: Station[];
@@ -64,7 +64,6 @@ export function Sidebar({
                     <p className={styles.empty}>No stations match your search.</p>
                 )}
                 {stations.map((s) => {
-                    const meta = SCORE_META[s.final_score];
                     return (
                         <button
                             key={s.id}
@@ -77,13 +76,7 @@ export function Sidebar({
                                 <span className={styles.name}>{s.name}</span>
                                 <span className={styles.type}>{s.type.toLowerCase()}</span>
                             </span>
-                            <span
-                                className={styles.scoreLabel}
-                                style={{ color: meta.color }}
-                                aria-label={`Score: ${meta.label}`}
-                            >
-                                {meta.label}
-                            </span>
+                            <ScoreBadge score={s.final_score} />
                         </button>
                     );
                 })}

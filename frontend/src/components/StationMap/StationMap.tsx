@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Tooltip, useMapEvents } from "react-leaflet";
 import type { Station } from "../../types/api";
 import { SCORE_META } from "../../constants/scores";
+import { ScoreBadge } from "../ScoreBadge/ScoreBadge";
 import styles from "./StationMap.module.css";
 import { AddStationModal } from "./AddStationModal";
 
@@ -72,7 +73,6 @@ export function StationMap({ stations, selectedId, onSelect, onStationAdded, isD
                 {stations.map((s) => {
                     const sel = s.id === selectedId;
                     const color = SCORE_META[s.final_score]?.color ?? "hsl(220,8%,56%)";
-                    const { label } = SCORE_META[s.final_score] ?? SCORE_META.UNKNOWN;
 
                     return (
                         <CircleMarker
@@ -90,7 +90,9 @@ export function StationMap({ stations, selectedId, onSelect, onStationAdded, isD
                             <Tooltip>
                                 <strong>{s.name}</strong>
                                 <br />
-                                <span style={{ color, fontSize: 10 }}>{label}</span>
+                                <div style={{ marginTop: 4 }}>
+                                    <ScoreBadge score={s.final_score} />
+                                </div>
                             </Tooltip>
                         </CircleMarker>
                     );
