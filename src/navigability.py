@@ -11,19 +11,25 @@ def evaluate_river(
 ) -> NavigabilityScore:
     if obs and obs.flow_rate_m3s is not None:
         flow = obs.flow_rate_m3s
+        
+    f_min = wb.flow_min
+    f_max = wb.flow_max
+    f_danger = wb.flow_danger
+
     if (
         flow is None
-        or wb.flow_min is None
-        or wb.flow_max is None
-        or wb.flow_danger is None
+        or f_min is None
+        or f_max is None
+        or f_danger is None
+        or f_max < 1.0
     ):
         return NavigabilityScore.UNKNOWN
 
-    if flow >= wb.flow_danger:
+    if flow >= f_danger:
         return NavigabilityScore.DANGEROUS
-    if flow < wb.flow_min or flow > wb.flow_max:
+    if flow < f_min or flow > f_max:
         return NavigabilityScore.POOR
-    if flow <= wb.flow_min + (wb.flow_max - wb.flow_min) * 0.6:
+    if flow <= f_min + (f_max - f_min) * 0.6:
         return NavigabilityScore.EXCELLENT
     return NavigabilityScore.GOOD
 
@@ -35,12 +41,16 @@ def evaluate_estuary(
 ) -> NavigabilityScore:
     if obs and obs.tide_level_m is not None:
         tide = obs.tide_level_m
-    if tide is None or wb.tide_min_m is None or wb.tide_max_m is None:
+        
+    t_min = wb.tide_min_m
+    t_max = wb.tide_max_m
+    
+    if tide is None or t_min is None or t_max is None:
         return NavigabilityScore.UNKNOWN
 
-    if tide < wb.tide_min_m:
+    if tide < t_min:
         return NavigabilityScore.POOR
-    if tide < wb.tide_max_m:
+    if tide < t_max:
         return NavigabilityScore.GOOD
     else:
         return NavigabilityScore.EXCELLENT
@@ -105,6 +115,8 @@ def evaluate_water_body(
         else:
             final_score = NavigabilityScore.GOOD
 
+    c_flow_max = wb.flow_max
+
     return StationScore(
         id=wb.id,
         name=wb.name,
@@ -124,9 +136,15 @@ def evaluate_water_body(
         ),
         wind_score=wind_score.value,
         final_score=final_score.value,
-        flow_min=wb.flow_min,
-        flow_max=wb.flow_max,
-        flow_danger=wb.flow_danger,
+        flow_min=wb.flow_min
+        if (c_flow_max is not None and c_flow_max >= 1.0)
+        else None,
+        flow_max=c_flow_max
+        if (c_flow_max is not None and c_flow_max >= 1.0)
+        else None,
+        flow_danger=wb.flow_danger
+        if (c_flow_max is not None and c_flow_max >= 1.0)
+        else None,
         tide_min_m=wb.tide_min_m,
         tide_max_m=wb.tide_max_m,
     )

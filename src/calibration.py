@@ -29,6 +29,14 @@ def calibrate_station_thresholds(wb: WaterBody, db: Session) -> None:
             wb.flow_max = get_percentile(flows, 80)
             wb.flow_danger = get_percentile(flows, 95)
 
+            # If the model has negligible data for this coordinate (max flow < 1.0),
+            # wipe the thresholds so the system falls back to wind-only scoring.
+            current_max = wb.flow_max
+            if current_max is not None and current_max < 1.0:
+                wb.flow_min = None
+                wb.flow_max = None
+                wb.flow_danger = None
+
         if wb.type in (
             WaterBodyType.ESTUARY,
             WaterBodyType.LAGOON,

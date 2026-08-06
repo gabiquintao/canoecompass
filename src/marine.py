@@ -1,5 +1,7 @@
 from typing import Optional
+
 from schemas import HourlyForecastEntry, PaddlingWindow, TidalPeak
+
 
 # Finds up to 2 High Tides and 2 Low Tides for a given day's hourly forecast.
 # A high tide peak is where the water rose before this hour and ebbing starts after.
@@ -56,16 +58,22 @@ def find_tidal_peaks(hours: list[HourlyForecastEntry]) -> dict[str, list[TidalPe
     return {"highs": highs[:2], "lows": lows[:2]}
 
 
-def find_best_paddling_window(hours: list[HourlyForecastEntry], is_tidal: bool) -> Optional[PaddlingWindow]:
+def find_best_paddling_window(
+    hours: list[HourlyForecastEntry], is_tidal: bool
+) -> Optional[PaddlingWindow]:
     if not hours:
         return None
-        
+
     best_idx = 0
     best = hours[0]
     for i, curr in enumerate(hours[1:], start=1):
         if is_tidal:
-            tide_best = best.tide_level_m if best.tide_level_m is not None else float('-inf')
-            tide_curr = curr.tide_level_m if curr.tide_level_m is not None else float('-inf')
+            tide_best = (
+                best.tide_level_m if best.tide_level_m is not None else float("-inf")
+            )
+            tide_curr = (
+                curr.tide_level_m if curr.tide_level_m is not None else float("-inf")
+            )
             if tide_curr > tide_best:
                 best = curr
                 best_idx = i
@@ -75,14 +83,14 @@ def find_best_paddling_window(hours: list[HourlyForecastEntry], is_tidal: bool) 
             if curr_wind < best_wind:
                 best = curr
                 best_idx = i
-                
+
     if is_tidal:
         start_idx = max(0, best_idx - 1)
         end_idx = min(len(hours) - 1, best_idx + 1)
         return PaddlingWindow(
             start_time=hours[start_idx].timestamp.strftime("%H:%M"),
             end_time=hours[end_idx].timestamp.strftime("%H:%M"),
-            peak_hour=best
+            peak_hour=best,
         )
     else:
         return PaddlingWindow(peak_hour=best)

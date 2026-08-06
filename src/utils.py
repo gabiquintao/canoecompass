@@ -24,8 +24,6 @@ def get_location_details(lat: float, lon: float) -> tuple[str, str]:
     return "Unknown", "Unknown"
 
 
-
-
 def get_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     r = 6371.0
     dlat = math.radians(lat2 - lat1)
