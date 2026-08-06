@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import type { HourlyForecastEntry } from "../types/api";
+import type { ForecastResponse } from "../types/api";
 import { apiClient } from "../lib/apiClient";
 
 export function useStationForecast(stationId: number | null) {
-    const [forecasts, setForecasts] = useState<HourlyForecastEntry[]>([]);
+    const [forecasts, setForecasts] = useState<ForecastResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -15,7 +15,7 @@ export function useStationForecast(stationId: number | null) {
         let cancelled = false;
 
         const fetchForecasts = async () => {
-            setForecasts([]);
+            setForecasts(null);
             setLoading(true);
             setError(null);
 
