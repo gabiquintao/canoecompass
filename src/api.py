@@ -25,7 +25,7 @@ from schemas import (
     StationScore,
 )
 from marine import find_best_paddling_window, find_tidal_peaks
-from utils import detect_water_body_info, get_distance_km, get_location_details
+from utils import get_distance_km, get_location_details
 
 app = FastAPI(title="Canoeing Navigability API")
 
@@ -51,9 +51,6 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
-@app.get("/api/stations/detect")
-def detect_station(lat: float, lon: float) -> dict[str, str]:
-    return detect_water_body_info(lat, lon)
 
 
 @app.get("/api/stations/score", response_model=list[StationScore])
