@@ -3,45 +3,13 @@ import type { NavigabilityScore } from "../types/api";
 export interface ScoreMeta {
     color: string;
     label: string;
-    bg: string;
-    border: string;
     description: string;
 }
 
 export const SCORE_META: Record<NavigabilityScore, ScoreMeta> = {
-    EXCELLENT: {
-        color: "#16a34a",
-        label: "Excellent",
-        bg: "#f0fdf4",
-        border: "#86efac",
-        description: "Ideal conditions",
-    },
-    GOOD: {
-        color: "#d97706",
-        label: "Good",
-        bg: "#fffbeb",
-        border: "#fcd34d",
-        description: "Slightly above ideal flow",
-    },
-    POOR: {
-        color: "#ea580c",
-        label: "Poor",
-        bg: "#fff7ed",
-        border: "#fdba74",
-        description: "Not recommended",
-    },
-    DANGEROUS: {
-        color: "#dc2626",
-        label: "Dangerous",
-        bg: "#fef2f2",
-        border: "#fca5a5",
-        description: "Do not paddle",
-    },
-    UNKNOWN: {
-        color: "#6b7280",
-        label: "Unknown",
-        bg: "#f9fafb",
-        border: "#d1d5db",
-        description: "No data available",
-    },
+    EXCELLENT: { color: "hsl(150,35%,42%)", label: "Excellent", description: "Ideal conditions" },
+    GOOD: { color: "hsl(38,42%,46%)", label: "Good", description: "Slightly above ideal" },
+    POOR: { color: "hsl(20,48%,48%)", label: "Poor", description: "Not recommended" },
+    DANGEROUS: { color: "hsl(0,58%,46%)", label: "Dangerous", description: "Do not paddle" },
+    UNKNOWN: { color: "hsl(220,8%,56%)", label: "Unknown", description: "No data available" },
 };
