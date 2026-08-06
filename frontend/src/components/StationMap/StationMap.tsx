@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { MapContainer, TileLayer, CircleMarker, Tooltip, useMapEvents } from "react-leaflet";
+import {
+    MapContainer,
+    TileLayer,
+    CircleMarker,
+    Tooltip,
+    useMapEvents,
+    ZoomControl,
+} from "react-leaflet";
 import type { Station } from "../../types/api";
 import { SCORE_META } from "../../constants/scores";
 import { ScoreBadge } from "../ScoreBadge/ScoreBadge";
@@ -67,7 +74,8 @@ export function StationMap({ stations, selectedId, onSelect, onStationAdded, isD
                 />
             )}
 
-            <MapContainer bounds={PORTUGAL_BOUNDS} className={styles.map}>
+            <MapContainer bounds={PORTUGAL_BOUNDS} className={styles.map} zoomControl={false}>
+                <ZoomControl position="bottomright" />
                 <TileLayer key={tileUrl} url={tileUrl} />
                 <MapClickListener onMapClick={handleMapClick} />
                 {stations.map((s) => {
