@@ -1,6 +1,5 @@
 import type { Station } from "../../types/api";
 import { SCORE_META } from "../../constants/scores";
-import { ScoreBadge } from "../ScoreBadge/ScoreBadge";
 import styles from "./Sidebar.module.css";
 
 interface Props {
@@ -9,78 +8,85 @@ interface Props {
     onSelect: (id: number) => void;
     searchQuery: string;
     onSearch: (query: string) => void;
+    searchRef?: React.RefObject<HTMLInputElement | null>;
 }
 
-export function Sidebar({ stations, selectedId, onSelect, searchQuery, onSearch }: Props) {
+export function Sidebar({
+    stations,
+    selectedId,
+    onSelect,
+    searchQuery,
+    onSearch,
+    searchRef,
+}: Props) {
     return (
-        <aside className={styles.sidebar}>
+        <aside className={styles.panel} aria-label="Station list">
             <div className={styles.search}>
+                <svg
+                    className={styles.searchIcon}
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                </svg>
                 <input
+                    ref={searchRef}
                     id="station-search"
                     type="text"
-                    placeholder="Search"
+                    placeholder="Search stations [/]"
                     value={searchQuery}
                     onChange={(e) => onSearch(e.target.value)}
-                    aria-label="Filter stations"
                     className={styles.searchInput}
+                    aria-label="Filter stations"
                 />
-                <span className={styles.count}>
-                    {stations.length} result{stations.length !== 1 ? "s" : ""}
-                </span>
+                {searchQuery && (
+                    <button
+                        className={styles.clearBtn}
+                        onClick={() => onSearch("")}
+                        title="Clear search"
+                        aria-label="Clear search"
+                    >
+                        ✕
+                    </button>
+                )}
             </div>
 
-            <div className={styles.tableWrapper}>
-                <table className={styles.table} role="grid" aria-label="Station list">
-                    <thead>
-                        <tr>
-                            <th>Station</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {stations.length === 0 && (
-                            <tr>
-                                <td colSpan={4} className={styles.empty}>
-                                    No stations match your search.
-                                </td>
-                            </tr>
-                        )}
-                        {stations.map((s) => (
-                            <tr
-                                key={s.id}
-                                className={`${styles.row} ${s.id === selectedId ? styles.rowActive : ""}`}
-                                onClick={() => onSelect(s.id)}
-                                tabIndex={0}
-                                onKeyDown={(e) => e.key === "Enter" && onSelect(s.id)}
-                                aria-selected={s.id === selectedId}
+            <div className={styles.list} role="listbox" aria-label="Stations">
+                {stations.length === 0 && (
+                    <p className={styles.empty}>No stations match your search.</p>
+                )}
+                {stations.map((s) => {
+                    const meta = SCORE_META[s.final_score];
+                    return (
+                        <button
+                            key={s.id}
+                            role="option"
+                            aria-selected={s.id === selectedId}
+                            className={`${styles.row} ${s.id === selectedId ? styles.rowActive : ""}`}
+                            onClick={() => onSelect(s.id)}
+                        >
+                            <span className={styles.rowBody}>
+                                <span className={styles.name}>{s.name}</span>
+                                <span className={styles.type}>{s.type.toLowerCase()}</span>
+                            </span>
+                            <span
+                                className={styles.scoreLabel}
+                                style={{ color: meta.color }}
+                                aria-label={`Score: ${meta.label}`}
                             >
-                                <td>
-                                    <div className={styles.name}>{s.name}</div>
-                                    <div className={styles.code}>{s.type}</div>
-                                </td>
-                                <td>
-                                    <ScoreBadge score={s.final_score} />
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            <div className={styles.legend}>
-                <div className={styles.legendTitle}>NAVIGABILITY LEGEND</div>
-                {(
-                    Object.entries(SCORE_META) as [
-                        string,
-                        (typeof SCORE_META)[keyof typeof SCORE_META],
-                    ][]
-                ).map(([key, meta]) => (
-                    <div key={key} className={styles.legendItem}>
-                        <span className={styles.dot} style={{ background: meta.color }} />
-                        <span className={styles.legendLabel}>{meta.label}</span>
-                        <span className={styles.legendNote}>{meta.description}</span>
-                    </div>
-                ))}
+                                {meta.label}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
         </aside>
     );
