@@ -226,8 +226,6 @@ export function DetailPanel({ station, onOpenForecast, onBack }: Props) {
     const isTidal =
         station.type === "ESTUARY" || station.type === "LAGOON" || station.type === "COASTAL";
     const isRiver = station.type === "RIVER";
-    const { color, label } = SCORE_META[station.final_score];
-
     const todayStr = new Date().toISOString().slice(0, 10);
     const todayHours = forecasts?.hourly?.filter((f) => f.timestamp.startsWith(todayStr)) ?? [];
     const summary = forecasts?.daily_summaries?.[todayStr];
@@ -259,13 +257,11 @@ export function DetailPanel({ station, onOpenForecast, onBack }: Props) {
                     </svg>
                 </button>
                 <div className={styles.headerText}>
-                    <div className={styles.nameRow}>
+                    <div className={styles.nameColumn}>
                         <h2 className={styles.stationName}>{station.name}</h2>
-                        <span className={styles.scoreBadge} style={{ color, borderColor: color }}>
-                            {label}
-                        </span>
+                        <span className={styles.stationType}>{station.type.toLowerCase()}</span>
                     </div>
-                    <span className={styles.stationType}>{station.type.toLowerCase()}</span>
+                    <ScoreBadge score={station.final_score} />
                 </div>
             </div>
 
