@@ -1,77 +1,85 @@
 .topbar {
-    height: 44px;
-    background: #0f172a;
-    color: #f8fafc;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px;
+    padding: 0 10px;
     flex-shrink: 0;
-    border-bottom: 1px solid #1e293b;
-    gap: 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    z-index: 20;
+}
+
+.left,
+.right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .brand {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
 }
 
-.title {
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-}
-
-.meta {
+.iconBtn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
+    flex-shrink: 0;
+}
+
+.iconBtn:hover {
+    background: var(--border);
+    color: var(--text);
+}
+
+.iconBtn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.divider {
+    width: 1px;
+    height: 16px;
+    background: var(--border);
+    flex-shrink: 0;
 }
 
 .updated {
     font-size: 11px;
-    color: #64748b;
+    color: var(--text-xmuted);
     font-family: var(--mono);
 }
 
 .status {
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     padding: 2px 8px;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 
 .statusOk {
-    background: #14532d;
-    color: #86efac;
-}
-.statusLoading {
-    background: #1e3a5f;
-    color: #93c5fd;
-}
-.statusError {
-    background: #7f1d1d;
-    color: #fca5a5;
+    color: hsl(150, 35%, 42%);
+    background: hsla(150, 35%, 42%, 0.1);
 }
 
-.refetch {
-    background: transparent;
-    border: 1px solid #334155;
-    color: #94a3b8;
-    border-radius: 3px;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition:
-        color 0.15s,
-        border-color 0.15s;
+.statusLoading {
+    color: var(--text-muted);
+    background: var(--border);
 }
-.refetch:hover {
-    color: #f8fafc;
-    border-color: #64748b;
+
+.statusError {
+    color: hsl(0, 58%, 46%);
+    background: hsla(0, 58%, 46%, 0.1);
 }

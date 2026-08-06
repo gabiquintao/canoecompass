@@ -24,7 +24,6 @@ export default function App() {
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
         localStorage.setItem("theme", isDark ? "dark" : "light");
-        console.log(setIsDark); // Suppress unused warning during incremental review
     }, [isDark]);
 
     const selectedStation = stations.find((s) => s.id === selectedId) ?? null;
@@ -80,6 +79,10 @@ export default function App() {
                 stationCount={stations.length}
                 lastUpdated={lastUpdated}
                 onRefetch={refetch}
+                isPanelOpen={isPanelOpen}
+                onTogglePanel={() => setIsPanelOpen((prev) => !prev)}
+                isDark={isDark}
+                onToggleTheme={() => setIsDark((prev) => !prev)}
             />
             <main className={styles.main}>
                 <StationMap
@@ -90,6 +93,7 @@ export default function App() {
                         setIsPanelOpen(true);
                     }}
                     onStationAdded={refetch}
+                    isDark={isDark}
                 />
                 {showSidebar && (
                     <Sidebar
@@ -98,12 +102,17 @@ export default function App() {
                         onSelect={setSelectedId}
                         searchQuery={searchQuery}
                         onSearch={setSearchQuery}
+                        searchRef={searchRef}
                     />
                 )}
                 {showDetail && selectedStation && (
                     <DetailPanel
                         station={selectedStation}
                         onOpenForecast={() => setIsForecastOpen(true)}
+                        onBack={() => {
+                            setSelectedId(null);
+                            setIsPanelOpen(true);
+                        }}
                     />
                 )}
             </main>
