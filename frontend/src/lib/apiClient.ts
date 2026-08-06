@@ -1,4 +1,4 @@
-import type { HourlyForecastEntry, Station, StationHistoryEntry } from "../types/api";
+import type { Station, StationHistoryEntry, ForecastResponse } from "../types/api";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -16,9 +16,6 @@ export const apiClient = {
     getStationHistory: (stationId: number): Promise<StationHistoryEntry[]> =>
         request<StationHistoryEntry[]>(`/api/stations/${stationId}/history`),
 
-    detectWaterBody: (lat: number, lon: number): Promise<{ name?: string; type?: string }> =>
-        request<{ name?: string; type?: string }>(`/api/stations/detect?lat=${lat}&lon=${lon}`),
-
     createStation: (body: {
         name: string;
         latitude: number;
@@ -31,6 +28,6 @@ export const apiClient = {
             body: JSON.stringify(body),
         }),
 
-    getStationForecast: (stationId: number): Promise<HourlyForecastEntry[]> =>
-        request<HourlyForecastEntry[]>(`/api/stations/${stationId}/forecast`),
+    getStationForecast: (stationId: number): Promise<ForecastResponse> =>
+        request<ForecastResponse>(`/api/stations/${stationId}/forecast`),
 };
