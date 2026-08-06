@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 
 import requests
 from sqlalchemy.orm import Session
@@ -15,10 +15,18 @@ from navigability import evaluate_water_body
 
 def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
     try:
-        wind_params: dict[str, str] = {
+        is_tidal = wb.type in [
+            WaterBodyType.ESTUARY,
+            WaterBodyType.LAGOON,
+            WaterBodyType.COASTAL,
+        ]
+
+        wind_params: dict[str, str | int] = {
             "latitude": str(wb.latitude),
             "longitude": str(wb.longitude),
-            "current": "wind_speed_10m,wind_gusts_10m",
+            "hourly": "wind_speed_10m,wind_gusts_10m",
+            "forecast_days": 1,
+            "past_days": 0,
             "timezone": "auto",
         }
 
@@ -27,67 +35,111 @@ def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
         )
         wind_response.raise_for_status()
         wind_data = wind_response.json()
-        wind_speed: float | None = wind_data.get("current", {}).get("wind_speed_10m")
-        wind_gust: float | None = wind_data.get("current", {}).get("wind_gusts_10m")
 
-        if wind_speed is None:
-            print(f"[{wb.name}] No wind data returned, skipping.")
-            return
+        time_list: list[str] = wind_data.get("hourly", {}).get("time") or []
+        wind_speeds: list[float] = (
+            wind_data.get("hourly", {}).get("wind_speed_10m") or []
+        )
+        wind_gusts: list[float] = (
+            wind_data.get("hourly", {}).get("wind_gusts_10m") or []
+        )
 
-        flow_rate: float | None = None
-        tide_level: float | None = None
-        wave_height: float | None = None
+        flow_by_day: dict[str, float] = {}
+        tide_list: list[float] = []
+        wave_list: list[float] = []
 
         if wb.type == WaterBodyType.RIVER:
-            flow_params: dict[str, str] = {
+            flow_params: dict[str, str | int] = {
                 "latitude": str(wb.latitude),
                 "longitude": str(wb.longitude),
                 "daily": "river_discharge",
+                "forecast_days": 1,
+                "past_days": 0,
                 "timezone": "auto",
             }
-
             flow_response = requests.get(
                 "https://flood-api.open-meteo.com/v1/flood", params=flow_params
             )
             flow_response.raise_for_status()
             flow_data = flow_response.json()
-
-            flow_list: list[float] = (
+            daily_times: list[str] = flow_data.get("daily", {}).get("time") or []
+            daily_flows: list[float | None] = (
                 flow_data.get("daily", {}).get("river_discharge") or []
             )
-            if flow_list:
-                flow_rate = flow_list[0]
+            flow_by_day = {
+                str(d): float(f)
+                for d, f in zip(daily_times, daily_flows)
+                if f is not None
+            }
 
-        elif wb.type == WaterBodyType.ESTUARY:
-            sea_level_params: dict[str, str] = {
+        elif is_tidal:
+            sea_params: dict[str, str | int] = {
                 "latitude": str(wb.latitude),
                 "longitude": str(wb.longitude),
                 "hourly": "sea_level_height_msl,wave_height",
+                "forecast_days": 1,
+                "past_days": 0,
                 "timezone": "auto",
             }
-
-            sea_level_response = requests.get(
-                "https://marine-api.open-meteo.com/v1/marine", params=sea_level_params
+            sea_response = requests.get(
+                "https://marine-api.open-meteo.com/v1/marine", params=sea_params
             )
-            sea_level_response.raise_for_status()
-            sea_level_data = sea_level_response.json()
+            sea_response.raise_for_status()
+            sea_data = sea_response.json()
+            tide_list = sea_data.get("hourly", {}).get("sea_level_height_msl") or []
+            wave_list = sea_data.get("hourly", {}).get("wave_height") or []
 
-            sea_list: list[float] = (
-                sea_level_data.get("hourly", {}).get("sea_level_height_msl") or []
-            )
-            wave_list: list[float] = (
-                sea_level_data.get("hourly", {}).get("wave_height") or []
-            )
-            time_list: list[str] = sea_level_data.get("hourly", {}).get("time") or []
+        from marine import find_best_paddling_window
+        from navigability import evaluate_water_body
+        from schemas import HourlyForecastEntry
 
-            if sea_list:
-                now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:00")
-                idx = time_list.index(now_iso) if now_iso in time_list else 0
-                tide_level = sea_list[idx]
-                wave_height = wave_list[idx] if idx < len(wave_list) else None
+        today_str = date.today().strftime("%Y-%m-%d")
+        today_hours: list[HourlyForecastEntry] = []
+
+        for i, t_str in enumerate(time_list):
+            if not t_str.startswith(today_str):
+                continue
+
+            ts = datetime.fromisoformat(t_str)
+            w_speed = wind_speeds[i] if i < len(wind_speeds) else None
+            w_gust = wind_gusts[i] if i < len(wind_gusts) else None
+            flow = flow_by_day.get(today_str)
+            tide = tide_list[i] if i < len(tide_list) else None
+            wave = wave_list[i] if i < len(wave_list) else None
+
+            score_obj = evaluate_water_body(
+                wb,
+                flow=flow,
+                wind=w_speed,
+                tide=tide,
+                wind_gust=w_gust,
+                wave_height=wave,
+            )
+
+            today_hours.append(
+                HourlyForecastEntry(
+                    timestamp=ts,
+                    wind_speed_kmh=w_speed,
+                    wind_gust_kmh=w_gust,
+                    flow_rate_m3s=flow,
+                    tide_level_m=tide,
+                    wave_height_m=wave,
+                    wind_score=score_obj.wind_score,
+                    tide_score=score_obj.tide_score,
+                    flow_score=score_obj.flow_score,
+                    final_score=score_obj.final_score,
+                )
+            )
+
+        if not today_hours:
+            print(f"[{wb.name}] No data found for today.")
+            return
+
+        best_window = find_best_paddling_window(today_hours, is_tidal=is_tidal)
+        best_hour = best_window.peak_hour if best_window else today_hours[12]
 
         print(
-            f"[{wb.name}] Wind: {wind_speed} km/h (Gust: {wind_gust}) | Flow: {flow_rate} | Tide: {tide_level} | Wave: {wave_height}"
+            f"[{wb.name}] Best Hour ({best_hour.timestamp.strftime('%H:%M')}): Wind: {best_hour.wind_speed_kmh} (Gust: {best_hour.wind_gust_kmh}) | Flow: {best_hour.flow_rate_m3s} | Tide: {best_hour.tide_level_m} | Wave: {best_hour.wave_height_m}"
         )
 
         existing_obs = (
@@ -100,22 +152,22 @@ def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
         )
 
         if existing_obs:
-            existing_obs.flow_rate_m3s = flow_rate
-            existing_obs.tide_level_m = tide_level
-            existing_obs.wind_speed_kmh = wind_speed
-            existing_obs.wind_gust_kmh = wind_gust
-            existing_obs.wave_height_m = wave_height
+            existing_obs.flow_rate_m3s = best_hour.flow_rate_m3s
+            existing_obs.tide_level_m = best_hour.tide_level_m
+            existing_obs.wind_speed_kmh = best_hour.wind_speed_kmh
+            existing_obs.wind_gust_kmh = best_hour.wind_gust_kmh
+            existing_obs.wave_height_m = best_hour.wave_height_m
             print(f"[{wb.name}] Data updated in the DB.")
         else:
             obs = DataObservation(
                 water_body_id=wb.id,
                 date=date.today(),
                 is_forecast=False,
-                flow_rate_m3s=flow_rate,
-                tide_level_m=tide_level,
-                wind_speed_kmh=wind_speed,
-                wind_gust_kmh=wind_gust,
-                wave_height_m=wave_height,
+                flow_rate_m3s=best_hour.flow_rate_m3s,
+                tide_level_m=best_hour.tide_level_m,
+                wind_speed_kmh=best_hour.wind_speed_kmh,
+                wind_gust_kmh=best_hour.wind_gust_kmh,
+                wave_height_m=best_hour.wave_height_m,
             )
             db.add(obs)
             print(f"[{wb.name}] Data saved in the DB.")

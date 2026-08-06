@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Generator
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -124,9 +124,13 @@ def get_stations_score(db: Session = Depends(get_db)) -> list[StationScore]:
 def get_station_history(
     station_id: int, db: Session = Depends(get_db)
 ) -> list[HistoryEntry]:
+    seven_days_ago = datetime.now().date() - timedelta(days=7)
     observations = (
         db.query(DataObservation)
-        .filter(DataObservation.water_body_id == station_id)
+        .filter(
+            DataObservation.water_body_id == station_id,
+            DataObservation.date >= seven_days_ago,
+        )
         .order_by(DataObservation.date)
         .all()
     )
