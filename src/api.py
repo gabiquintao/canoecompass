@@ -1,8 +1,10 @@
 import os
 from collections import defaultdict
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
-from typing import Generator
+from typing import AsyncGenerator, Generator
 
+from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func
@@ -10,9 +12,11 @@ from sqlalchemy.orm import Session
 
 from calibration import calibrate_station_thresholds
 from database import DataObservation, HourlyForecast, SessionLocal, WaterBody
+from marine import find_best_paddling_window, find_tidal_peaks
 from navigability import evaluate_water_body
 from openmeteo_fetcher import (
     fetch_data_for_single_body,
+    fetch_data_for_water_bodies,
     fetch_hourly_forecasts_for_single_body,
 )
 from schemas import (
@@ -24,10 +28,29 @@ from schemas import (
     StationCreated,
     StationScore,
 )
-from marine import find_best_paddling_window, find_tidal_peaks
 from utils import get_distance_km, get_location_details
 
-app = FastAPI(title="Canoeing Navigability API")
+
+def update_weather_data() -> None:
+    print("Running scheduled background task.")
+    try:
+        fetch_data_for_water_bodies()
+    except Exception as e:
+        print(f"Background fetch failed: {e}")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(update_weather_data, "interval", hours=6)
+    scheduler.start()
+    print("Background weather scheduler started.")
+    yield
+    scheduler.shutdown()
+    print("Background weather scheduler shut down.")
+
+
+app = FastAPI(title="Canoeing Navigability API", lifespan=lifespan)
 
 cors_origins = [
     origin.strip()
@@ -49,8 +72,6 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
-
-
 
 
 @app.get("/api/stations/score", response_model=list[StationScore])
