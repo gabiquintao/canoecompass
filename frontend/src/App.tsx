@@ -117,11 +117,13 @@ export default function App() {
                     />
                 )}
             </main>
-            <ForecastModal
-                isOpen={isForecastOpen}
-                onClose={() => setIsForecastOpen(false)}
-                station={selectedStation}
-            />
+            {isForecastOpen && selectedStation && (
+                <ForecastModal
+                    isOpen={isForecastOpen}
+                    onClose={() => setIsForecastOpen(false)}
+                    station={selectedStation}
+                />
+            )}
         </div>
     );
 }
