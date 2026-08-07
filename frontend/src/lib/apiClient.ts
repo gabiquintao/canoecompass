@@ -23,6 +23,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     return res.json() as Promise<T>;
 }
 
+const forecastCache = new Map<number, { data: ForecastResponse; timestamp: number }>();
+const CACHE_TTL = 1000 * 60 * 5;
+
 export const apiClient = {
     getStationsScore: (): Promise<Station[]> => request<Station[]>("/api/stations/score"),
 
@@ -41,6 +44,13 @@ export const apiClient = {
             body: JSON.stringify(body),
         }),
 
-    getStationForecast: (stationId: number): Promise<ForecastResponse> =>
-        request<ForecastResponse>(`/api/stations/${stationId}/forecast`),
+    getStationForecast: async (stationId: number): Promise<ForecastResponse> => {
+        const cached = forecastCache.get(stationId);
+        if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+            return cached.data;
+        }
+        const data = await request<ForecastResponse>(`/api/stations/${stationId}/forecast`);
+        forecastCache.set(stationId, { data, timestamp: Date.now() });
+        return data;
+    },
 };
