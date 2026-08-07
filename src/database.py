@@ -119,10 +119,3 @@ class HourlyForecast(Base):
     )
 
 
-if __name__ == "__main__":
-    from sqlalchemy import text
-
-    with engine.begin() as conn:
-        conn.execute(text("DROP SCHEMA public CASCADE"))
-        conn.execute(text("CREATE SCHEMA public"))
-    Base.metadata.create_all(bind=engine)
