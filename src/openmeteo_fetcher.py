@@ -1,3 +1,4 @@
+import logging
 from datetime import date, datetime
 
 import requests
@@ -12,6 +13,8 @@ from database import (
 )
 from helpers import is_tidal
 from navigability import evaluate_water_body
+
+logger = logging.getLogger(__name__)
 
 
 def _fetch_wind_data(wb: WaterBody, forecast_days: int) -> tuple[list[str], list[float], list[float]]:
@@ -125,14 +128,21 @@ def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
             )
 
         if not today_hours:
-            print(f"[{wb.name}] No data found for today.")
+            logger.warning("[%s] No data found for today.", wb.name)
             return
 
         best_window = find_best_paddling_window(today_hours, is_tidal=wb_is_tidal)
         best_hour = best_window.peak_hour if best_window else today_hours[12]
 
-        print(
-            f"[{wb.name}] Best Hour ({best_hour.timestamp.strftime('%H:%M')}): Wind: {best_hour.wind_speed_kmh} (Gust: {best_hour.wind_gust_kmh}) | Flow: {best_hour.flow_rate_m3s} | Tide: {best_hour.tide_level_m} | Wave: {best_hour.wave_height_m}"
+        logger.info(
+            "[%s] Best Hour (%s): Wind: %s (Gust: %s) | Flow: %s | Tide: %s | Wave: %s",
+            wb.name,
+            best_hour.timestamp.strftime("%H:%M"),
+            best_hour.wind_speed_kmh,
+            best_hour.wind_gust_kmh,
+            best_hour.flow_rate_m3s,
+            best_hour.tide_level_m,
+            best_hour.wave_height_m,
         )
 
         existing_obs = (
@@ -150,7 +160,7 @@ def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
             existing_obs.wind_speed_kmh = best_hour.wind_speed_kmh
             existing_obs.wind_gust_kmh = best_hour.wind_gust_kmh
             existing_obs.wave_height_m = best_hour.wave_height_m
-            print(f"[{wb.name}] Data updated in the DB.")
+            logger.info("[%s] Data updated in the DB.", wb.name)
         else:
             obs = DataObservation(
                 water_body_id=wb.id,
@@ -163,12 +173,12 @@ def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
                 wave_height_m=best_hour.wave_height_m,
             )
             db.add(obs)
-            print(f"[{wb.name}] Data saved in the DB.")
+            logger.info("[%s] Data saved in the DB.", wb.name)
 
         db.commit()
 
     except Exception as exc:
-        print(f"[{wb.name}] Failed to fetch data, skipping: {exc}")
+        logger.error("[%s] Failed to fetch data, skipping: %s", wb.name, exc)
         db.rollback()
 
 
@@ -253,10 +263,10 @@ def fetch_hourly_forecasts_for_single_body(wb: WaterBody, db: Session) -> None:
                 db.add(new_fc)
 
         db.commit()
-        print(f"[{wb.name}] forecast hours saved/updated in DB.")
+        logger.info("[%s] forecast hours saved/updated in DB.", wb.name)
 
     except Exception as exc:
-        print(f"[{wb.name}] Failed to fetch hourly forecasts, skipping: {exc}")
+        logger.error("[%s] Failed to fetch hourly forecasts, skipping: %s", wb.name, exc)
         db.rollback()
 
 
