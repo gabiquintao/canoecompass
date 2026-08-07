@@ -163,13 +163,25 @@
 }
 
 @media (max-width: 599px) {
+    /*
+     * On mobile the panel collapses to just the search bar, docked to the
+     * top of the map area (directly under the TopBar). Results drop down
+     * beneath it as an overlay instead of living inside a bottom-anchored
+     * floating card, so the map can occupy the rest of the screen.
+     */
     .panel {
         top: 0;
         left: 0;
         right: 0;
         bottom: auto;
         width: auto;
-        height: auto;
+        /*
+         * Cap the whole panel (search bar + expanded list) to the height of
+         * .main so it can never grow taller than the visible area and get
+         * clipped by .main's overflow:hidden with no way to scroll to the
+         * clipped part.
+         */
+        max-height: 100%;
         border-right: none;
         border-bottom: 1px solid var(--border);
         border-radius: 0;
@@ -180,6 +192,7 @@
         border-bottom: none;
     }
 
+    /* iOS Safari auto-zooms the page when a focused input has font-size < 16px */
     .searchInput {
         font-size: 16px;
     }
@@ -192,9 +205,19 @@
         background: var(--surface-glass);
     }
 
+    /*
+     * Expand the list when the user focuses the search input or has typed a query.
+     * :focus-within catches the active focus; :has(:not(:placeholder-shown)) catches
+     * the case where text is present but focus has moved (e.g. tapping a result).
+     * min-height: 0 lets flexbox actually shrink this below its content size
+     * so overflow-y: auto can kick in and scroll internally, instead of the
+     * list just growing past .panel's own max-height and getting clipped.
+     */
     .panel:focus-within .list,
     .panel:has(.searchInput:not(:placeholder-shown)) .list {
-        max-height: 60vh;
+        flex: 1;
+        min-height: 0;
+        max-height: none;
         overflow-y: auto;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
