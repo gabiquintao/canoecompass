@@ -2,7 +2,7 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from database import WaterBodyType
 
@@ -20,6 +20,16 @@ class StationCreate(BaseModel):
     latitude: float
     longitude: float
     type: WaterBodyType
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        v = v.strip()
+        if len(v) < 2:
+            raise ValueError("Station name must be at least 2 characters long.")
+        if len(v) > 120:
+            raise ValueError("Station name must be at most 120 characters long.")
+        return v
 
 
 class StationScore(BaseModel):
@@ -59,6 +69,8 @@ class StationCreated(BaseModel):
 
 
 class HourlyForecastEntry(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     timestamp: datetime
     wind_speed_kmh: Optional[float] = None
     wind_gust_kmh: Optional[float] = None
@@ -69,9 +81,6 @@ class HourlyForecastEntry(BaseModel):
     tide_score: Optional[str] = None
     flow_score: Optional[str] = None
     final_score: str
-
-    class Config:
-        from_attributes = True
 
 
 class TidalPeak(BaseModel):
