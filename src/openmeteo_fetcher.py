@@ -14,80 +14,76 @@ from helpers import is_tidal
 from navigability import evaluate_water_body
 
 
+def _fetch_wind_data(wb: WaterBody, forecast_days: int) -> tuple[list[str], list[float], list[float]]:
+    params: dict[str, str | int] = {
+        "latitude": str(wb.latitude),
+        "longitude": str(wb.longitude),
+        "hourly": "wind_speed_10m,wind_gusts_10m",
+        "forecast_days": forecast_days,
+        "timezone": "auto",
+    }
+    response = requests.get("https://api.open-meteo.com/v1/forecast", params=params)
+    response.raise_for_status()
+    data = response.json()
+    hourly = data.get("hourly", {})
+    return (
+        hourly.get("time") or [],
+        hourly.get("wind_speed_10m") or [],
+        hourly.get("wind_gusts_10m") or [],
+    )
+
+
+def _fetch_flow_data(wb: WaterBody, forecast_days: int) -> dict[str, float]:
+    params: dict[str, str | int] = {
+        "latitude": str(wb.latitude),
+        "longitude": str(wb.longitude),
+        "daily": "river_discharge",
+        "forecast_days": forecast_days,
+        "timezone": "auto",
+    }
+    response = requests.get("https://flood-api.open-meteo.com/v1/flood", params=params)
+    response.raise_for_status()
+    data = response.json()
+    daily = data.get("daily", {})
+    times: list[str] = daily.get("time") or []
+    flows: list[float | None] = daily.get("river_discharge") or []
+    return {str(d): float(f) for d, f in zip(times, flows) if f is not None}
+
+
+def _fetch_tidal_data(wb: WaterBody, forecast_days: int) -> tuple[list[float], list[float]]:
+    params: dict[str, str | int] = {
+        "latitude": str(wb.latitude),
+        "longitude": str(wb.longitude),
+        "hourly": "sea_level_height_msl,wave_height",
+        "forecast_days": forecast_days,
+        "timezone": "auto",
+    }
+    response = requests.get("https://marine-api.open-meteo.com/v1/marine", params=params)
+    response.raise_for_status()
+    data = response.json()
+    hourly = data.get("hourly", {})
+    return (
+        hourly.get("sea_level_height_msl") or [],
+        hourly.get("wave_height") or [],
+    )
+
+
 def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
     try:
         wb_is_tidal = is_tidal(wb)
 
-        wind_params: dict[str, str | int] = {
-            "latitude": str(wb.latitude),
-            "longitude": str(wb.longitude),
-            "hourly": "wind_speed_10m,wind_gusts_10m",
-            "forecast_days": 1,
-            "past_days": 0,
-            "timezone": "auto",
-        }
-
-        wind_response = requests.get(
-            "https://api.open-meteo.com/v1/forecast", params=wind_params
-        )
-        wind_response.raise_for_status()
-        wind_data = wind_response.json()
-
-        time_list: list[str] = wind_data.get("hourly", {}).get("time") or []
-        wind_speeds: list[float] = (
-            wind_data.get("hourly", {}).get("wind_speed_10m") or []
-        )
-        wind_gusts: list[float] = (
-            wind_data.get("hourly", {}).get("wind_gusts_10m") or []
-        )
+        time_list, wind_speeds, wind_gusts = _fetch_wind_data(wb, forecast_days=1)
 
         flow_by_day: dict[str, float] = {}
         tide_list: list[float] = []
         wave_list: list[float] = []
 
         if wb.type == WaterBodyType.RIVER:
-            flow_params: dict[str, str | int] = {
-                "latitude": str(wb.latitude),
-                "longitude": str(wb.longitude),
-                "daily": "river_discharge",
-                "forecast_days": 1,
-                "past_days": 0,
-                "timezone": "auto",
-            }
-            flow_response = requests.get(
-                "https://flood-api.open-meteo.com/v1/flood", params=flow_params
-            )
-            flow_response.raise_for_status()
-            flow_data = flow_response.json()
-            daily_times: list[str] = flow_data.get("daily", {}).get("time") or []
-            daily_flows: list[float | None] = (
-                flow_data.get("daily", {}).get("river_discharge") or []
-            )
-            flow_by_day = {
-                str(d): float(f)
-                for d, f in zip(daily_times, daily_flows)
-                if f is not None
-            }
-
+            flow_by_day = _fetch_flow_data(wb, forecast_days=1)
         elif wb_is_tidal:
-            sea_params: dict[str, str | int] = {
-                "latitude": str(wb.latitude),
-                "longitude": str(wb.longitude),
-                "hourly": "sea_level_height_msl,wave_height",
-                "forecast_days": 1,
-                "past_days": 0,
-                "timezone": "auto",
-            }
-            sea_response = requests.get(
-                "https://marine-api.open-meteo.com/v1/marine", params=sea_params
-            )
-            sea_response.raise_for_status()
-            sea_data = sea_response.json()
-            tide_list = sea_data.get("hourly", {}).get("sea_level_height_msl") or []
-            wave_list = sea_data.get("hourly", {}).get("wave_height") or []
+            tide_list, wave_list = _fetch_tidal_data(wb, forecast_days=1)
 
         from marine import find_best_paddling_window
-        from navigability import evaluate_water_body
         from schemas import HourlyForecastEntry
 
         today_str = date.today().strftime("%Y-%m-%d")
@@ -192,63 +188,16 @@ def fetch_data_for_water_bodies() -> None:
 
 def fetch_hourly_forecasts_for_single_body(wb: WaterBody, db: Session) -> None:
     try:
-        wind_params: dict[str, str | int] = {
-            "latitude": str(wb.latitude),
-            "longitude": str(wb.longitude),
-            "hourly": "wind_speed_10m,wind_gusts_10m",
-            "forecast_days": 7,
-            "timezone": "auto",
-        }
-        wind_response = requests.get(
-            "https://api.open-meteo.com/v1/forecast", params=wind_params
-        )
-        wind_response.raise_for_status()
-        wind_data = wind_response.json()
-
-        time_list: list[str] = wind_data.get("hourly", {}).get("time") or []
-        wind_speeds: list[float] = (
-            wind_data.get("hourly", {}).get("wind_speed_10m") or []
-        )
-        wind_gusts: list[float] = (
-            wind_data.get("hourly", {}).get("wind_gusts_10m") or []
-        )
+        time_list, wind_speeds, wind_gusts = _fetch_wind_data(wb, forecast_days=7)
 
         flow_by_day: dict[str, float] = {}
         tide_list: list[float] = []
         wave_list: list[float] = []
 
         if wb.type == WaterBodyType.RIVER:
-            flow_params: dict[str, str | int] = {
-                "latitude": str(wb.latitude),
-                "longitude": str(wb.longitude),
-                "daily": "river_discharge",
-                "forecast_days": 7,
-                "timezone": "auto",
-            }
-            flow_response = requests.get(
-                "https://flood-api.open-meteo.com/v1/flood", params=flow_params
-            )
-            flow_data = flow_response.json()
-            daily_times: list[str] = flow_data.get("daily", {}).get("time") or []
-            daily_flows: list[float] = (
-                flow_data.get("daily", {}).get("river_discharge") or []
-            )
-            flow_by_day = {str(d): float(f) for d, f in zip(daily_times, daily_flows)}
-
+            flow_by_day = _fetch_flow_data(wb, forecast_days=7)
         elif is_tidal(wb):
-            sea_params: dict[str, str | int] = {
-                "latitude": str(wb.latitude),
-                "longitude": str(wb.longitude),
-                "hourly": "sea_level_height_msl,wave_height",
-                "forecast_days": 7,
-                "timezone": "auto",
-            }
-            sea_response = requests.get(
-                "https://marine-api.open-meteo.com/v1/marine", params=sea_params
-            )
-            sea_data = sea_response.json()
-            tide_list = sea_data.get("hourly", {}).get("sea_level_height_msl") or []
-            wave_list = sea_data.get("hourly", {}).get("wave_height") or []
+            tide_list, wave_list = _fetch_tidal_data(wb, forecast_days=7)
 
         existing_map: dict[datetime, HourlyForecast] = {
             fc.timestamp: fc
