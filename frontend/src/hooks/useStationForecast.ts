@@ -1,46 +1,13 @@
-import { useState, useEffect } from "react";
+import { useCallback } from "react";
 import type { ForecastResponse } from "../types/api";
 import { apiClient } from "../lib/apiClient";
+import { useAsyncQuery } from "./useAsyncQuery";
 
 export function useStationForecast(stationId: number | null) {
-    const [forecasts, setForecasts] = useState<ForecastResponse | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (stationId === null) {
-            return;
-        }
-
-        let cancelled = false;
-
-        const fetchForecasts = async () => {
-            setForecasts(null);
-            setLoading(true);
-            setError(null);
-
-            try {
-                const data = await apiClient.getStationForecast(stationId);
-                if (!cancelled) {
-                    setForecasts(data);
-                }
-            } catch (err: unknown) {
-                if (!cancelled) {
-                    setError(err instanceof Error ? err.message : "Unknown error");
-                }
-            } finally {
-                if (!cancelled) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        fetchForecasts();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [stationId]);
-
+    const fetcher = useCallback(
+        stationId !== null ? () => apiClient.getStationForecast(stationId) : null,
+        [stationId]
+    );
+    const { data: forecasts, loading, error } = useAsyncQuery<ForecastResponse | null>(null, fetcher);
     return { forecasts, loading, error };
 }
