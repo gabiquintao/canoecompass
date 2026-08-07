@@ -17,7 +17,9 @@ from navigability import evaluate_water_body
 logger = logging.getLogger(__name__)
 
 
-def _fetch_wind_data(wb: WaterBody, forecast_days: int) -> tuple[list[str], list[float], list[float]]:
+def _fetch_wind_data(
+    wb: WaterBody, forecast_days: int
+) -> tuple[list[str], list[float], list[float]]:
     params: dict[str, str | int] = {
         "latitude": str(wb.latitude),
         "longitude": str(wb.longitude),
@@ -50,10 +52,14 @@ def _fetch_flow_data(wb: WaterBody, forecast_days: int) -> dict[str, float]:
     daily = data.get("daily", {})
     times: list[str] = daily.get("time") or []
     flows: list[float | None] = daily.get("river_discharge") or []
+    # Map daily dates to discharge values so hourly timestamps can look up their
+    # corresponding daily flow using the date prefix.
     return {str(d): float(f) for d, f in zip(times, flows) if f is not None}
 
 
-def _fetch_tidal_data(wb: WaterBody, forecast_days: int) -> tuple[list[float], list[float]]:
+def _fetch_tidal_data(
+    wb: WaterBody, forecast_days: int
+) -> tuple[list[float], list[float]]:
     params: dict[str, str | int] = {
         "latitude": str(wb.latitude),
         "longitude": str(wb.longitude),
@@ -61,7 +67,9 @@ def _fetch_tidal_data(wb: WaterBody, forecast_days: int) -> tuple[list[float], l
         "forecast_days": forecast_days,
         "timezone": "auto",
     }
-    response = requests.get("https://marine-api.open-meteo.com/v1/marine", params=params)
+    response = requests.get(
+        "https://marine-api.open-meteo.com/v1/marine", params=params
+    )
     response.raise_for_status()
     data = response.json()
     hourly = data.get("hourly", {})
@@ -187,10 +195,13 @@ def fetch_data_for_water_bodies() -> None:
 
     try:
         water_bodies = db.query(WaterBody).all()
+        logger.info("Starting fetch cycle for %d station(s).", len(water_bodies))
 
         for wb in water_bodies:
             fetch_data_for_single_body(wb, db)
             fetch_hourly_forecasts_for_single_body(wb, db)
+
+        logger.info("Fetch cycle complete for %d station(s).", len(water_bodies))
 
     finally:
         db.close()
@@ -209,6 +220,9 @@ def fetch_hourly_forecasts_for_single_body(wb: WaterBody, db: Session) -> None:
         elif is_tidal(wb):
             tide_list, wave_list = _fetch_tidal_data(wb, forecast_days=7)
 
+        # Query existing forecast rows once before looping instead of querying per
+        # timestamp inside the loop, avoiding repetitive database queries and enabling
+        # constant-time lookup.
         existing_map: dict[datetime, HourlyForecast] = {
             fc.timestamp: fc
             for fc in db.query(HourlyForecast)
@@ -266,7 +280,9 @@ def fetch_hourly_forecasts_for_single_body(wb: WaterBody, db: Session) -> None:
         logger.info("[%s] forecast hours saved/updated in DB.", wb.name)
 
     except Exception as exc:
-        logger.error("[%s] Failed to fetch hourly forecasts, skipping: %s", wb.name, exc)
+        logger.error(
+            "[%s] Failed to fetch hourly forecasts, skipping: %s", wb.name, exc
+        )
         db.rollback()
 
 

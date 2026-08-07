@@ -40,7 +40,6 @@ from utils import get_distance_km, get_location_details
 logger = logging.getLogger(__name__)
 
 
-
 def update_weather_data() -> None:
     logger.info("Running scheduled background task.")
     try:
@@ -95,6 +94,8 @@ def get_stations_score(
 ) -> list[StationScore]:
     water_bodies = db.query(WaterBody).all()
 
+    # Aggregate the most recent observation timestamp per station in a subquery and join
+    # the result in a single query rather than querying each station individually.
     latest_date_subq = (
         db.query(
             DataObservation.water_body_id,
@@ -135,9 +136,17 @@ def get_stations_score(
         hf = hourly_by_id.get(wb.id)
         obs = obs_by_id.get(wb.id)
 
-        def get_val(attr: str, _hf: HourlyForecast | None = hf, _obs: DataObservation | None = obs) -> float | None:
+        def get_val(
+            attr: str,
+            _hf: HourlyForecast | None = hf,
+            _obs: DataObservation | None = obs,
+        ) -> float | None:
             val = getattr(_hf, attr, None) if _hf else None
-            return val if val is not None else (getattr(_obs, attr, None) if _obs else None)
+            return (
+                val
+                if val is not None
+                else (getattr(_obs, attr, None) if _obs else None)
+            )
 
         result.append(
             evaluate_water_body(
@@ -241,6 +250,10 @@ async def create_station(
 ) -> StationCreated:
     expected_secret = os.getenv("POST_SECRET")
     if not expected_secret or x_post_secret != expected_secret:
+        logger.warning(
+            "Rejected unauthorized POST /api/stations from %s",
+            get_remote_address(request),
+        )
         raise HTTPException(status_code=403, detail="Forbidden")
     existing_bodies = db.query(WaterBody).all()
     for wb in existing_bodies:
@@ -248,6 +261,12 @@ async def create_station(
             station.latitude, station.longitude, wb.latitude, wb.longitude
         )
         if distance_km < 0.5:
+            logger.warning(
+                "Rejected duplicate station '%s': too close to '%s' (%.2f km)",
+                station.name,
+                wb.name,
+                distance_km,
+            )
             raise HTTPException(
                 status_code=409,
                 detail=f"Spot already exists within 500m: {wb.name} ({distance_km:.2f} km away)",
@@ -271,5 +290,12 @@ async def create_station(
     await asyncio.to_thread(fetch_data_for_single_body, new_wb, db)
     await asyncio.to_thread(fetch_hourly_forecasts_for_single_body, new_wb, db)
     db.refresh(new_wb)
+    logger.info(
+        "Station '%s' (id=%d) created successfully in %s, %s",
+        new_wb.name,
+        new_wb.id,
+        dist,
+        reg,
+    )
 
     return StationCreated(id=new_wb.id, message=f"{dist}, {reg}")
