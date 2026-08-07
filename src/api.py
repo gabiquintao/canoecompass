@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from calibration import calibrate_station_thresholds
 from database import DataObservation, HourlyForecast, SessionLocal, WaterBody
+from helpers import is_tidal
 from marine import find_all_tidal_peaks, find_best_paddling_window
 from navigability import evaluate_water_body
 from openmeteo_fetcher import (
@@ -90,8 +91,6 @@ def get_stations_score(
 ) -> list[StationScore]:
     water_bodies = db.query(WaterBody).all()
 
-    # Aggregate the most recent observation timestamp per station in a subquery and join
-    # the result in a single query rather than querying each station individually.
     latest_date_subq = (
         db.query(
             DataObservation.water_body_id,
@@ -132,11 +131,9 @@ def get_stations_score(
         hf = hourly_by_id.get(wb.id)
         obs = obs_by_id.get(wb.id)
 
-        def get_val(attr: str) -> float | None:
-            val = getattr(hf, attr, None) if hf else None
-            return (
-                val if val is not None else (getattr(obs, attr, None) if obs else None)
-            )
+        def get_val(attr: str, _hf: HourlyForecast | None = hf, _obs: DataObservation | None = obs) -> float | None:
+            val = getattr(_hf, attr, None) if _hf else None
+            return val if val is not None else (getattr(_obs, attr, None) if _obs else None)
 
         result.append(
             evaluate_water_body(
@@ -194,7 +191,7 @@ def get_station_forecast(
     if not wb:
         raise HTTPException(status_code=404, detail="Station not found")
 
-    is_tidal = wb.type in ["ESTUARY", "LAGOON", "COASTAL"]
+    station_is_tidal = is_tidal(wb)
 
     today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     forecasts = (
@@ -215,12 +212,11 @@ def get_station_forecast(
         day_str = entry.timestamp.strftime("%Y-%m-%d")
         grouped_by_day[day_str].append(entry)
 
-    # Calculate all peaks seamlessly across the entire 168-hour array
     all_peaks = find_all_tidal_peaks(hourly_entries)
 
     for day_str, hours in grouped_by_day.items():
         peaks_for_day = all_peaks.get(day_str, {"highs": [], "lows": []})
-        best_window = find_best_paddling_window(hours, is_tidal=is_tidal)
+        best_window = find_best_paddling_window(hours, is_tidal=station_is_tidal)
 
         daily_summaries[day_str] = DailyMarineSummary(
             high_tides=peaks_for_day["highs"],
