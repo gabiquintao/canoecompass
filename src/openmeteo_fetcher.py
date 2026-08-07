@@ -10,16 +10,13 @@ from database import (
     WaterBody,
     WaterBodyType,
 )
+from helpers import is_tidal
 from navigability import evaluate_water_body
 
 
 def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
     try:
-        is_tidal = wb.type in [
-            WaterBodyType.ESTUARY,
-            WaterBodyType.LAGOON,
-            WaterBodyType.COASTAL,
-        ]
+        wb_is_tidal = is_tidal(wb)
 
         wind_params: dict[str, str | int] = {
             "latitude": str(wb.latitude),
@@ -72,7 +69,7 @@ def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
                 if f is not None
             }
 
-        elif is_tidal:
+        elif wb_is_tidal:
             sea_params: dict[str, str | int] = {
                 "latitude": str(wb.latitude),
                 "longitude": str(wb.longitude),
@@ -135,7 +132,7 @@ def fetch_data_for_single_body(wb: WaterBody, db: Session) -> None:
             print(f"[{wb.name}] No data found for today.")
             return
 
-        best_window = find_best_paddling_window(today_hours, is_tidal=is_tidal)
+        best_window = find_best_paddling_window(today_hours, is_tidal=wb_is_tidal)
         best_hour = best_window.peak_hour if best_window else today_hours[12]
 
         print(
@@ -236,11 +233,9 @@ def fetch_hourly_forecasts_for_single_body(wb: WaterBody, db: Session) -> None:
             daily_flows: list[float] = (
                 flow_data.get("daily", {}).get("river_discharge") or []
             )
-            # Map daily dates to discharge values so hourly timestamps can look up their
-            # corresponding daily flow using the date prefix.
             flow_by_day = {str(d): float(f) for d, f in zip(daily_times, daily_flows)}
 
-        elif wb.type == WaterBodyType.ESTUARY:
+        elif is_tidal(wb):
             sea_params: dict[str, str | int] = {
                 "latitude": str(wb.latitude),
                 "longitude": str(wb.longitude),
@@ -255,9 +250,6 @@ def fetch_hourly_forecasts_for_single_body(wb: WaterBody, db: Session) -> None:
             tide_list = sea_data.get("hourly", {}).get("sea_level_height_msl") or []
             wave_list = sea_data.get("hourly", {}).get("wave_height") or []
 
-        # Query existing forecast rows once before looping instead of querying per
-        # timestamp inside the loop, avoiding repetitive database queries and enabling
-        # constant-time lookup.
         existing_map: dict[datetime, HourlyForecast] = {
             fc.timestamp: fc
             for fc in db.query(HourlyForecast)
