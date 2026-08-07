@@ -1,3 +1,4 @@
+import asyncio
 import os
 from collections import defaultdict
 from contextlib import asynccontextmanager
@@ -232,7 +233,7 @@ def get_station_forecast(
 
 @app.post("/api/stations", response_model=StationCreated, status_code=201)
 @limiter.limit("5/minute")
-def create_station(
+async def create_station(
     request: Request,
     station: StationCreate,
     db: Session = Depends(get_db),
@@ -252,7 +253,9 @@ def create_station(
                 detail=f"Spot already exists within 500m: {wb.name} ({distance_km:.2f} km away)",
             )
 
-    reg, dist = get_location_details(station.latitude, station.longitude)
+    reg, dist = await asyncio.to_thread(
+        get_location_details, station.latitude, station.longitude
+    )
 
     new_wb = WaterBody(
         name=station.name,
@@ -264,9 +267,9 @@ def create_station(
     )
     db.add(new_wb)
     db.commit()
-    calibrate_station_thresholds(new_wb, db)
-    fetch_data_for_single_body(new_wb, db)
-    fetch_hourly_forecasts_for_single_body(new_wb, db)
+    await asyncio.to_thread(calibrate_station_thresholds, new_wb, db)
+    await asyncio.to_thread(fetch_data_for_single_body, new_wb, db)
+    await asyncio.to_thread(fetch_hourly_forecasts_for_single_body, new_wb, db)
     db.refresh(new_wb)
 
     return StationCreated(id=new_wb.id, message=f"{dist}, {reg}")
