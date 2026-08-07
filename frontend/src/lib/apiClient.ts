@@ -40,7 +40,10 @@ export const apiClient = {
     }): Promise<{ id: number; message: string }> =>
         request<{ id: number; message: string }>("/api/stations", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "X-Post-Secret": import.meta.env.VITE_POST_SECRET ?? "",
+            },
             body: JSON.stringify(body),
         }),
 
