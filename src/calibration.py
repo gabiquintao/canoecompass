@@ -68,6 +68,15 @@ def calibrate_station_thresholds(wb: WaterBody, db: Session) -> None:
 
         db.commit()
         db.refresh(wb)
+        logger.info(
+            "[%s] Calibration complete — flow(min=%.2f, max=%.2f, danger=%.2f) tide(min=%.2f, max=%.2f)",
+            wb.name,
+            wb.flow_min or 0,
+            wb.flow_max or 0,
+            wb.flow_danger or 0,
+            wb.tide_min_m or 0,
+            wb.tide_max_m or 0,
+        )
 
     except Exception as exc:
         logger.error("[%s] Calibration failed: %s", wb.name, exc)
