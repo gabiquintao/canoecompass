@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import AsyncGenerator, Generator
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -233,8 +233,14 @@ def get_station_forecast(
 @app.post("/api/stations", response_model=StationCreated, status_code=201)
 @limiter.limit("5/minute")
 def create_station(
-    request: Request, station: StationCreate, db: Session = Depends(get_db)
+    request: Request,
+    station: StationCreate,
+    db: Session = Depends(get_db),
+    x_post_secret: str | None = Header(default=None),
 ) -> StationCreated:
+    expected_secret = os.getenv("POST_SECRET")
+    if not expected_secret or x_post_secret != expected_secret:
+        raise HTTPException(status_code=403, detail="Forbidden")
     existing_bodies = db.query(WaterBody).all()
     for wb in existing_bodies:
         distance_km = get_distance_km(
