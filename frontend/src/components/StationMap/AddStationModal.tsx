@@ -63,9 +63,6 @@ export function AddStationModal({ lat, lng, onClose, onSuccess }: Props) {
             <h3 id="modal-title" className={styles.title}>
                 Add Spot
             </h3>
-            <p className={styles.coordinates}>
-                {lat.toFixed(4)}° N, {lng.toFixed(4)}° W
-            </p>
 
             {errorMessage && <p className={styles.error}>{errorMessage}</p>}
 
