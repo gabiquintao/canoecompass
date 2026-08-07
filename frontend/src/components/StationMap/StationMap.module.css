@@ -32,11 +32,16 @@
 @media (max-width: 599px) {
     :global(.leaflet-control-zoom) {
         position: fixed !important;
-        top: 50px !important;
+        top: 96px !important;
         right: 10px !important;
         bottom: auto !important;
         left: auto !important;
         z-index: 1000 !important;
+    }
+
+    .addSpotBtn,
+    .addSpotActions {
+        top: 96px;
     }
 }
 
