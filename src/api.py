@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 from collections import defaultdict
 from contextlib import asynccontextmanager
@@ -36,13 +37,16 @@ from schemas import (
 )
 from utils import get_distance_km, get_location_details
 
+logger = logging.getLogger(__name__)
+
+
 
 def update_weather_data() -> None:
-    print("Running scheduled background task.")
+    logger.info("Running scheduled background task.")
     try:
         fetch_data_for_water_bodies()
     except Exception as e:
-        print(f"Background fetch failed: {e}")
+        logger.error("Background fetch failed: %s", e)
 
 
 @asynccontextmanager
@@ -50,10 +54,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     scheduler = BackgroundScheduler()
     scheduler.add_job(update_weather_data, "interval", hours=6)
     scheduler.start()
-    print("Background weather scheduler started.")
+    logger.info("Background weather scheduler started.")
     yield
     scheduler.shutdown()
-    print("Background weather scheduler shut down.")
+    logger.info("Background weather scheduler shut down.")
 
 
 limiter = Limiter(key_func=get_remote_address)

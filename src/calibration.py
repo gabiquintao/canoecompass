@@ -1,8 +1,12 @@
+import logging
+
 import requests
 from sqlalchemy.orm import Session
 
 from database import WaterBody, WaterBodyType
 from utils import get_percentile
+
+logger = logging.getLogger(__name__)
 
 
 def calibrate_station_thresholds(wb: WaterBody, db: Session) -> None:
@@ -66,5 +70,5 @@ def calibrate_station_thresholds(wb: WaterBody, db: Session) -> None:
         db.refresh(wb)
 
     except Exception as exc:
-        print(f"[{wb.name}] Calibration failed: {exc}")
+        logger.error("[%s] Calibration failed: %s", wb.name, exc)
         db.rollback()
