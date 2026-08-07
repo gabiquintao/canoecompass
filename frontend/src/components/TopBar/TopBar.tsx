@@ -59,6 +59,7 @@ export function TopBar({
                     </svg>
                 </button>
                 <span className={styles.brand}>Canoecompass</span>
+                <span className={styles.appBadge}>App</span>
             </div>
 
             <div className={styles.right}>
@@ -75,7 +76,7 @@ export function TopBar({
                     className={styles.iconBtn}
                     onClick={onRefetch}
                     disabled={loading}
-                    title="Refresh station data  [R]"
+                    title="Refresh station data [R]"
                     aria-label="Refresh"
                 >
                     <svg
@@ -95,6 +96,26 @@ export function TopBar({
                     </svg>
                 </button>
                 <div className={styles.divider} aria-hidden="true" />
+                <button
+                    className={styles.iconBtn}
+                    onClick={() => window.open("https://your-docs-url", "_blank")}
+                    title="Documentation"
+                    aria-label="Documentation"
+                >
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                </button>
                 <button
                     className={styles.iconBtn}
                     onClick={onToggleTheme}
