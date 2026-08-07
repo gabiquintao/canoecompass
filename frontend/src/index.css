@@ -40,6 +40,12 @@ body {
     color: var(--text);
     font-size: 13px;
     line-height: 1.5;
+    /*
+     * This is a single-page fixed-layout app — nothing outside .list should
+     * ever scroll. Without this, iOS Safari can rubber-band the whole page
+     * (especially once the on-screen keyboard resizes the visual viewport),
+     * which looks like the page "scrolling off" below the search results.
+     */
     overflow: hidden;
     overscroll-behavior: none;
     position: fixed;
@@ -48,12 +54,9 @@ body {
 
 #root {
     height: 100%;
+    /* Fallback for browsers without dvh support */
     height: 100dvh;
+    /* Real visible height, tracked via visualViewport in main.tsx — wins over dvh on iOS once the keyboard is open */
     height: var(--vvh, 100dvh);
     overflow: hidden;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    transform: translateY(var(--vv-offset-top, 0px));
 }
