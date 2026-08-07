@@ -61,6 +61,27 @@
     background: var(--border);
 }
 
+.addBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 2px;
+}
+
+.addBtn:hover {
+    opacity: 0.9;
+}
+
 .list {
     flex: 1;
     overflow-y: auto;

@@ -13,6 +13,7 @@ export default function App() {
     const [searchQuery, setSearchQuery] = useState("");
     const [isForecastOpen, setIsForecastOpen] = useState(false);
     const [isPanelOpen, setIsPanelOpen] = useState(true);
+    const [isAddingMode, setIsAddingMode] = useState(false);
     const searchRef = useRef<HTMLInputElement>(null);
 
     const [isDark, setIsDark] = useState(() => {
@@ -39,6 +40,7 @@ export default function App() {
             switch (e.key) {
                 case "Escape":
                     if (isForecastOpen) setIsForecastOpen(false);
+                    else if (isAddingMode) setIsAddingMode(false);
                     else if (selectedId !== null) {
                         setSelectedId(null);
                         setIsPanelOpen(true);
@@ -66,7 +68,7 @@ export default function App() {
         };
         window.addEventListener("keydown", handler);
         return () => window.removeEventListener("keydown", handler);
-    }, [isForecastOpen, selectedId, refetch]);
+    }, [isForecastOpen, isAddingMode, selectedId, refetch]);
 
     const showDetail = selectedId !== null;
     const showSidebar = !showDetail && isPanelOpen;
@@ -94,6 +96,8 @@ export default function App() {
                     }}
                     onStationAdded={refetch}
                     isDark={isDark}
+                    isAddingMode={isAddingMode}
+                    onSetAddingMode={setIsAddingMode}
                 />
                 {showSidebar && (
                     <Sidebar
@@ -104,6 +108,7 @@ export default function App() {
                         onSearch={setSearchQuery}
                         searchRef={searchRef}
                         error={error}
+                        onAddSpot={() => setIsAddingMode(true)}
                     />
                 )}
                 {showDetail && selectedStation && (

@@ -12,14 +12,21 @@ import { SCORE_META } from "../../constants/scores";
 import { ScoreBadge } from "../ScoreBadge/ScoreBadge";
 import styles from "./StationMap.module.css";
 import { AddStationModal } from "./AddStationModal";
+import type L from "leaflet";
 
 const PORTUGAL_BOUNDS: [[number, number], [number, number]] = [
     [36.8, -9.8],
     [42.2, -6.1],
 ];
 
-function MapClickListener({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
-    useMapEvents({ click: (e) => onMapClick(e.latlng.lat, e.latlng.lng) });
+function MapClickListener({
+    onMapClick,
+    disabled,
+}: {
+    onMapClick: (lat: number, lng: number) => void;
+    disabled: boolean;
+}) {
+    useMapEvents({ click: (e) => !disabled && onMapClick(e.latlng.lat, e.latlng.lng) });
     return null;
 }
 
@@ -41,19 +48,27 @@ interface Props {
     onSelect: (id: number) => void;
     onStationAdded?: () => void;
     isDark: boolean;
+    isAddingMode: boolean;
+    onSetAddingMode: (val: boolean) => void;
 }
 
-export function StationMap({ stations, selectedId, onSelect, onStationAdded, isDark }: Props) {
+export function StationMap({
+    stations,
+    selectedId,
+    onSelect,
+    onStationAdded,
+    isDark,
+    isAddingMode,
+    onSetAddingMode,
+}: Props) {
     const [newCoords, setNewCoords] = useState<{ lat: number; lng: number } | null>(null);
+    const [mapRef, setMapRef] = useState<L.Map | null>(null);
 
     const handleMapClick = (lat: number, lng: number) => {
         const nearby = stations.find((s) => distKm(lat, lng, s.latitude, s.longitude) < 0.5);
         if (nearby) {
             onSelect(nearby.id);
-            setNewCoords(null);
-            return;
         }
-        setNewCoords({ lat, lng });
     };
 
     const tileUrl = isDark
@@ -74,10 +89,18 @@ export function StationMap({ stations, selectedId, onSelect, onStationAdded, isD
                 />
             )}
 
-            <MapContainer bounds={PORTUGAL_BOUNDS} className={styles.map} zoomControl={false}>
+            <MapContainer
+                ref={setMapRef}
+                bounds={PORTUGAL_BOUNDS}
+                className={styles.map}
+                zoomControl={false}
+            >
                 <ZoomControl position="bottomright" />
                 <TileLayer key={tileUrl} url={tileUrl} />
-                <MapClickListener onMapClick={handleMapClick} />
+                <MapClickListener
+                    onMapClick={handleMapClick}
+                    disabled={isAddingMode || !!newCoords}
+                />
                 {stations.map((s) => {
                     const sel = s.id === selectedId;
                     const color = SCORE_META[s.final_score]?.color ?? "hsl(220,8%,56%)";
@@ -106,6 +129,29 @@ export function StationMap({ stations, selectedId, onSelect, onStationAdded, isD
                     );
                 })}
             </MapContainer>
+
+            {isAddingMode && (
+                <div className={styles.crosshairOverlay}>
+                    <div className={styles.crosshair}>+</div>
+                    <div className={styles.addSpotActions}>
+                        <button className={styles.cancelBtn} onClick={() => onSetAddingMode(false)}>
+                            Cancel
+                        </button>
+                        <button
+                            className={styles.confirmBtn}
+                            onClick={() => {
+                                if (mapRef) {
+                                    const center = mapRef.getCenter();
+                                    setNewCoords({ lat: center.lat, lng: center.lng });
+                                    onSetAddingMode(false);
+                                }
+                            }}
+                        >
+                            Confirm Location
+                        </button>
+                    </div>
+                </div>
+            )}
         </section>
     );
 }

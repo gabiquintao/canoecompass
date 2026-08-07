@@ -7,9 +7,10 @@ interface Props {
     selectedId: number | null;
     onSelect: (id: number) => void;
     searchQuery: string;
-    onSearch: (query: string) => void;
-    searchRef?: React.RefObject<HTMLInputElement | null>;
-    error?: string | null;
+    onSearch: (q: string) => void;
+    searchRef: React.RefObject<HTMLInputElement | null>;
+    error: string | null;
+    onAddSpot: () => void;
 }
 
 export function Sidebar({
@@ -20,6 +21,7 @@ export function Sidebar({
     onSearch,
     searchRef,
     error,
+    onAddSpot,
 }: Props) {
     return (
         <aside className={styles.panel} aria-label="Station list">
@@ -56,9 +58,29 @@ export function Sidebar({
                         title="Clear search"
                         aria-label="Clear search"
                     >
-                        ✕
+                        <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
                     </button>
                 )}
+                <button
+                    className={styles.addBtn}
+                    onClick={onAddSpot}
+                    title="Add new spot"
+                    aria-label="Add new spot"
+                >
+                    +
+                </button>
             </div>
 
             {error && (

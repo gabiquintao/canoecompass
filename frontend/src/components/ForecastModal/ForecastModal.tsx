@@ -165,7 +165,7 @@ export function ForecastModal({ station, isOpen = false, onClose }: Props) {
                         <p className={styles.subtitle}>No forecast data for this day.</p>
                     )}
 
-                    {!loading && dayHours.length > 0 && (
+                    {!loading && dayHours.length > 0 && viewMode === "chart" && (
                         <div className={styles.summaryGrid}>
                             {(isRiver || isTidal) && (
                                 <div className={styles.summaryItem}>
@@ -383,41 +383,56 @@ export function ForecastModal({ station, isOpen = false, onClose }: Props) {
                                 <tbody>
                                     {dayHours.map((h) => (
                                         <tr key={h.timestamp}>
-                                            <td className={styles.mono}>
+                                            <td className={styles.mono} data-label="Hour">
                                                 {h.timestamp.slice(11, 16)}
                                             </td>
-                                            <td className={`${styles.mono} ${styles.numCol}`}>
+                                            <td
+                                                className={`${styles.mono} ${styles.numCol}`}
+                                                data-label="Wind"
+                                            >
                                                 {h.wind_speed_kmh != null
                                                     ? `${h.wind_speed_kmh} km/h`
                                                     : "—"}
                                             </td>
-                                            <td className={`${styles.mono} ${styles.numCol}`}>
+                                            <td
+                                                className={`${styles.mono} ${styles.numCol}`}
+                                                data-label="Gust"
+                                            >
                                                 {h.wind_gust_kmh != null
                                                     ? `${h.wind_gust_kmh} km/h`
                                                     : "—"}
                                             </td>
                                             {isTidal && (
-                                                <td className={`${styles.mono} ${styles.numCol}`}>
+                                                <td
+                                                    className={`${styles.mono} ${styles.numCol}`}
+                                                    data-label="Tide"
+                                                >
                                                     {h.tide_level_m != null
                                                         ? `${h.tide_level_m.toFixed(2)} m`
                                                         : "—"}
                                                 </td>
                                             )}
                                             {isTidal && (
-                                                <td className={`${styles.mono} ${styles.numCol}`}>
+                                                <td
+                                                    className={`${styles.mono} ${styles.numCol}`}
+                                                    data-label="Waves"
+                                                >
                                                     {h.wave_height_m != null
                                                         ? `${h.wave_height_m.toFixed(2)} m`
                                                         : "—"}
                                                 </td>
                                             )}
                                             {isRiver && (
-                                                <td className={`${styles.mono} ${styles.numCol}`}>
+                                                <td
+                                                    className={`${styles.mono} ${styles.numCol}`}
+                                                    data-label="Flow"
+                                                >
                                                     {h.flow_rate_m3s != null
                                                         ? `${h.flow_rate_m3s.toFixed(0)} m³/s`
                                                         : "—"}
                                                 </td>
                                             )}
-                                            <td className={styles.numCol}>
+                                            <td className={styles.numCol} data-label="Score">
                                                 <div className={styles.badgeCell}>
                                                     <ScoreBadge score={h.final_score} />
                                                 </div>
