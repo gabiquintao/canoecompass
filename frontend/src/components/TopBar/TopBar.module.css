@@ -116,3 +116,19 @@
     color: hsl(0, 58%, 46%);
     background: hsla(0, 58%, 46%, 0.1);
 }
+
+@media (max-width: 599px) {
+    .appBadge,
+    .updated,
+    .divider {
+        display: none;
+    }
+    
+    .status {
+        max-width: 80px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
