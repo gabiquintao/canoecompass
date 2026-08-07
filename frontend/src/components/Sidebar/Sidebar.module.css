@@ -180,7 +180,6 @@
         border-bottom: none;
     }
 
-    /* iOS Safari auto-zooms the page when a focused input has font-size < 16px */
     .searchInput {
         font-size: 16px;
     }
