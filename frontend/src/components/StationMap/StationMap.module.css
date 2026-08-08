@@ -1,16 +1,22 @@
 .section {
     position: absolute;
     inset: 0;
-    overflow: hidden;
-    z-index: 0; /* z-index on a positioned element creates a stacking context, keeping Leaflet's internal
-                   z-indexes (200-1000) contained so they don't bleed above the Sidebar (z-index:10)
-                   or TopBar (z-index:20). Using z-index:0 instead of isolation:isolate avoids a WebKit
-                   compositing bug that prevents Leaflet canvas tiles from painting on iOS Safari. */
+    /*
+     * No z-index, no isolation, no overflow:hidden here.
+     * Stacking context tricks on this element conflict with iOS Safari's compositor
+     * and prevent Leaflet tiles from painting. The sidebar/topbar instead carry
+     * z-index > 1000 to stay above Leaflet's controls.
+     */
 }
 
 .map {
     width: 100%;
     height: 100%;
+    /*
+     * Forces a GPU compositing layer on iOS Safari. Without this, Leaflet's canvas
+     * tile renderer can silently fail inside fixed-layout pages on iOS.
+     */
+    transform: translateZ(0);
 }
 
 :global(.leaflet-tooltip) {
@@ -39,7 +45,7 @@
         right: 10px !important;
         bottom: auto !important;
         left: auto !important;
-        z-index: 1000 !important;
+        z-index: 1002 !important; /* above sidebar/topbar (1001) */
     }
 
     .addSpotBtn,
