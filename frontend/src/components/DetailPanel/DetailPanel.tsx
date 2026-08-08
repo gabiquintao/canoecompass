@@ -10,7 +10,8 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import { ScoreBadge } from "../ScoreBadge/ScoreBadge";
 
 interface Props {
-    station: Station;
+    station: Station | null;
+    isOpen: boolean;
     onOpenForecast: () => void;
     onBack: () => void;
 }
@@ -220,12 +221,12 @@ function ExtraMetrics({ station }: { station: Station }) {
     );
 }
 
-export function DetailPanel({ station, onOpenForecast, onBack }: Props) {
-    const { history, loading: historyLoading, error: historyError } = useStationHistory(station.id);
-    const { forecasts } = useStationForecast(station.id);
+export function DetailPanel({ station, isOpen, onOpenForecast, onBack }: Props) {
+    const { history, loading: historyLoading, error: historyError } = useStationHistory(station?.id ?? 0);
+    const { forecasts } = useStationForecast(station?.id ?? 0);
     const isTidal =
-        station.type === "ESTUARY" || station.type === "LAGOON" || station.type === "COASTAL";
-    const isRiver = station.type === "RIVER";
+        station?.type === "ESTUARY" || station?.type === "LAGOON" || station?.type === "COASTAL";
+    const isRiver = station?.type === "RIVER";
     const todayStr = new Date().toISOString().slice(0, 10);
     const todayHours = forecasts?.hourly?.filter((f) => f.timestamp.startsWith(todayStr)) ?? [];
     const summary = forecasts?.daily_summaries?.[todayStr];
@@ -233,8 +234,12 @@ export function DetailPanel({ station, onOpenForecast, onBack }: Props) {
     const lows = summary?.low_tides ?? [];
     const bestWindow = summary?.best_paddling_window ?? null;
 
+    if (!station) {
+        return <section className={`${styles.panel} ${styles.closed}`} aria-hidden="true" />;
+    }
+
     return (
-        <section className={styles.panel} aria-label="Station detail">
+        <section className={`${styles.panel} ${!isOpen ? styles.closed : ""}`} aria-label="Station detail">
             <div className={styles.header}>
                 <button
                     className={styles.backBtn}

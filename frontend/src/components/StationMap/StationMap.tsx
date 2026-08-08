@@ -62,13 +62,19 @@ export function StationMap({
     const [newCoords, setNewCoords] = useState<{ lat: number; lng: number } | null>(null);
     const mapRef = useRef<L.Map | null>(null);
 
-    // After the map mounts, re-measure the container so tiles paint correctly on iOS.
-    // The timeout lets the visual viewport and browser chrome finish their layout pass first.
+    // Use ResizeObserver to reliably call invalidateSize() when the browser
+    // gives the container its final physical dimensions on iOS, replacing the timeout race condition.
     useEffect(() => {
-        const id = setTimeout(() => {
-            mapRef.current?.invalidateSize();
-        }, 150);
-        return () => clearTimeout(id);
+        const map = mapRef.current;
+        if (!map) return;
+
+        const container = map.getContainer();
+        const observer = new ResizeObserver(() => {
+            map.invalidateSize();
+        });
+        
+        observer.observe(container);
+        return () => observer.disconnect();
     }, []);
 
     const handleMapClick = (lat: number, lng: number) => {

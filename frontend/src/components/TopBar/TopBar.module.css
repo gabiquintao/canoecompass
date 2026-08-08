@@ -1,8 +1,4 @@
 .topbar {
-    position: fixed;
-    top: env(safe-area-inset-top, 0px);
-    left: 0;
-    right: 0;
     height: 38px;
     display: flex;
     align-items: center;
@@ -11,7 +7,7 @@
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     gap: 12px;
-    z-index: 1001; /* above Leaflet's max z-index (1000) */
+    z-index: 20;
 }
 
 .left,

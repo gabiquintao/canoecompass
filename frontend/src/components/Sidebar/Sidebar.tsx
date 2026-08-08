@@ -11,6 +11,7 @@ interface Props {
     searchRef: React.RefObject<HTMLInputElement | null>;
     error: string | null;
     onAddSpot: () => void;
+    isOpen: boolean;
 }
 
 export function Sidebar({
@@ -22,9 +23,10 @@ export function Sidebar({
     searchRef,
     error,
     onAddSpot,
+    isOpen,
 }: Props) {
     return (
-        <aside className={styles.panel} aria-label="Station list">
+        <aside className={`${styles.panel} ${!isOpen ? styles.closed : ""}`} aria-label="Station list">
             <div className={styles.search}>
                 <svg
                     className={styles.searchIcon}
