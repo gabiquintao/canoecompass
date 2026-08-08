@@ -16,8 +16,16 @@ from slowapi.util import get_remote_address
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from auth import get_current_user_id
 from calibration import calibrate_station_thresholds
-from database import DataObservation, HourlyForecast, SessionLocal, WaterBody
+from database import (
+    DataObservation,
+    HourlyForecast,
+    SessionLocal,
+    User,
+    UserFavorite,
+    WaterBody,
+)
 from helpers import is_tidal
 from marine import find_all_tidal_peaks, find_best_paddling_window
 from navigability import evaluate_water_body
@@ -299,3 +307,82 @@ async def create_station(
     )
 
     return StationCreated(id=new_wb.id, message=f"{dist}, {reg}")
+
+
+# --- Auth Protected Endpoints ---
+
+
+@app.get("/api/users/me")
+def get_user_profile(
+    user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"id": user.id, "timezone": user.timezone}
+
+
+@app.put("/api/users/me/timezone")
+def update_user_timezone(
+    timezone: str,
+    user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        user.timezone = timezone
+        db.commit()
+    return {"message": "Timezone updated"}
+
+
+@app.get("/api/favorites")
+def get_favorites(
+    user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)
+) -> list[int]:
+    favs = db.query(UserFavorite).filter(UserFavorite.user_id == user_id).all()
+    return [f.water_body_id for f in favs]
+
+
+@app.post("/api/favorites/{station_id}")
+def add_favorite(
+    station_id: int,
+    user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    wb = db.query(WaterBody).filter(WaterBody.id == station_id).first()
+    if not wb:
+        raise HTTPException(status_code=404, detail="Station not found")
+
+    existing = (
+        db.query(UserFavorite)
+        .filter(
+            UserFavorite.user_id == user_id, UserFavorite.water_body_id == station_id
+        )
+        .first()
+    )
+
+    if not existing:
+        new_fav = UserFavorite(user_id=user_id, water_body_id=station_id)
+        db.add(new_fav)
+        db.commit()
+    return {"message": "Favorite added"}
+
+
+@app.delete("/api/favorites/{station_id}")
+def remove_favorite(
+    station_id: int,
+    user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    fav = (
+        db.query(UserFavorite)
+        .filter(
+            UserFavorite.user_id == user_id, UserFavorite.water_body_id == station_id
+        )
+        .first()
+    )
+
+    if fav:
+        db.delete(fav)
+        db.commit()
+    return {"message": "Favorite removed"}
