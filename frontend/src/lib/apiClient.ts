@@ -1,9 +1,16 @@
 import type { Station, StationHistoryEntry, ForecastResponse } from "../types/api";
+import { supabase } from "../supabase";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-    const res = await fetch(`${BASE_URL}${path}`, options);
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+    const { data } = await supabase.auth.getSession();
+    const headers = new Headers(options.headers || {});
+    if (data.session?.access_token) {
+        headers.set("Authorization", `Bearer ${data.session.access_token}`);
+    }
+
+    const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
     if (!res.ok) {
         let errorMsg = res.statusText;
         try {
@@ -56,4 +63,21 @@ export const apiClient = {
         forecastCache.set(stationId, { data, timestamp: Date.now() });
         return data;
     },
+
+    getFavorites: (): Promise<number[]> => request<number[]>("/api/favorites"),
+
+    addFavorite: (stationId: number): Promise<{ message: string }> =>
+        request<{ message: string }>(`/api/favorites/${stationId}`, { method: "POST" }),
+
+    removeFavorite: (stationId: number): Promise<{ message: string }> =>
+        request<{ message: string }>(`/api/favorites/${stationId}`, { method: "DELETE" }),
+
+    updateTimezone: (timezone: string): Promise<{ message: string }> =>
+        request<{ message: string }>(
+            `/api/users/me/timezone?timezone=${encodeURIComponent(timezone)}`,
+            { method: "PUT" }
+        ),
+
+    getUserProfile: (): Promise<{ id: string; timezone: string }> =>
+        request<{ id: string; timezone: string }>("/api/users/me"),
 };
