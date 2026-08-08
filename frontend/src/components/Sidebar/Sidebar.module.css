@@ -131,14 +131,6 @@
     font-family: var(--mono);
 }
 
-.scoreLabel {
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    flex-shrink: 0;
-}
-
 .empty {
     padding: 24px 12px;
     text-align: center;

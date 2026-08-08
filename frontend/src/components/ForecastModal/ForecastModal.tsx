@@ -51,7 +51,7 @@ export function ForecastModal({ station, isOpen = false, onClose }: Props) {
     const [selectedDay, setSelectedDay] = useState("");
     const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
 
-    const days = forecasts ? Object.keys(forecasts.daily_summaries) : [];
+    const days = forecasts ? Object.keys(forecasts.daily_summaries).sort() : [];
     const activeDay = selectedDay || days[0] || "";
     const activeDayIndex = days.indexOf(activeDay);
     const dayHours = forecasts
@@ -99,7 +99,7 @@ export function ForecastModal({ station, isOpen = false, onClose }: Props) {
                     <button
                         className={styles.closeBtn}
                         onClick={onClose}
-                        aria-label="Close forecast  [Esc]"
+                        aria-label="Close forecast [Esc]"
                         title="Close  [Esc]"
                     >
                         <svg
