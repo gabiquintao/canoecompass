@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     MapContainer,
     TileLayer,
@@ -62,7 +62,14 @@ export function StationMap({
     onSetAddingMode,
 }: Props) {
     const [newCoords, setNewCoords] = useState<{ lat: number; lng: number } | null>(null);
-    const [mapRef, setMapRef] = useState<L.Map | null>(null);
+    const mapRef = useRef<L.Map | null>(null);
+
+    // After the map mounts, re-measure the container so tiles paint correctly on iOS.
+    useEffect(() => {
+        if (mapRef.current) {
+            mapRef.current.invalidateSize();
+        }
+    }, []);
 
     const handleMapClick = (lat: number, lng: number) => {
         const nearby = stations.find((s) => distKm(lat, lng, s.latitude, s.longitude) < 0.5);
@@ -90,7 +97,7 @@ export function StationMap({
             )}
 
             <MapContainer
-                ref={setMapRef}
+                ref={(m) => { mapRef.current = m; }}
                 bounds={PORTUGAL_BOUNDS}
                 className={styles.map}
                 zoomControl={false}
@@ -140,8 +147,8 @@ export function StationMap({
                         <button
                             className={styles.confirmBtn}
                             onClick={() => {
-                                if (mapRef) {
-                                    const center = mapRef.getCenter();
+                                if (mapRef.current) {
+                                    const center = mapRef.current.getCenter();
                                     setNewCoords({ lat: center.lat, lng: center.lng });
                                     onSetAddingMode(false);
                                 }
