@@ -74,7 +74,6 @@
     min-width: 0;
 }
 
-
 .stationType {
     font-size: 10px;
     color: var(--text-xmuted);
@@ -318,13 +317,11 @@
 
 .tideValHigh {
     color: var(--text);
-    font-family: var(--mono);
     font-weight: 600;
 }
 
 .tideValLow {
     color: var(--text-muted);
-    font-family: var(--mono);
     font-weight: 500;
 }
 
