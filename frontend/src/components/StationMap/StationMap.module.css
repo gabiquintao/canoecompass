@@ -2,7 +2,6 @@
     position: absolute;
     inset: 0;
     overflow: hidden;
-    isolation: isolate; /* Contains Leaflet's z-indexes (200-700) within the map stacking context */
 }
 
 .map {
@@ -43,28 +42,6 @@
     .addSpotActions {
         top: 96px;
     }
-}
-
-.addSpotBtn {
-    position: absolute;
-    top: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 800;
-    padding: 8px 16px;
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    cursor: pointer;
-    font-family: var(--font);
-}
-
-.addSpotBtn:hover {
-    background: var(--bg);
 }
 
 .crosshairOverlay {
