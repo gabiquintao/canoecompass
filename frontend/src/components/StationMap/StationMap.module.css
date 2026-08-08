@@ -10,8 +10,8 @@
 }
 
 .map {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    inset: 0;
     /*
      * Forces a GPU compositing layer on iOS Safari. Without this, Leaflet's canvas
      * tile renderer can silently fail inside fixed-layout pages on iOS.
