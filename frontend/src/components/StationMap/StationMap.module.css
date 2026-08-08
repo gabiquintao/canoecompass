@@ -2,6 +2,7 @@
     position: absolute;
     inset: 0;
     overflow: hidden;
+    isolation: isolate; /* Creates a stacking context that contains Leaflet's z-indexes (200-1000) so they don't bleed above the TopBar/Sidebar */
 }
 
 .map {
