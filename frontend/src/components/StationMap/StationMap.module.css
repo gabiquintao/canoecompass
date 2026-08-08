@@ -1,22 +1,12 @@
 .section {
     position: absolute;
     inset: 0;
-    /*
-     * No z-index, no isolation, no overflow:hidden here.
-     * Stacking context tricks on this element conflict with iOS Safari's compositor
-     * and prevent Leaflet tiles from painting. The sidebar/topbar instead carry
-     * z-index > 1000 to stay above Leaflet's controls.
-     */
 }
 
 .map {
     position: absolute;
     inset: 0;
-    /*
-     * Forces a GPU compositing layer on iOS Safari. Without this, Leaflet's canvas
-     * tile renderer can silently fail inside fixed-layout pages on iOS.
-     */
-    transform: translateZ(0);
+    transform: translateZ(0); /* GPU layer — helps iOS Safari render Leaflet tiles */
 }
 
 :global(.leaflet-tooltip) {
