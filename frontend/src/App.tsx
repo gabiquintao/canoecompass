@@ -5,6 +5,8 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import { StationMap } from "./components/StationMap/StationMap";
 import { DetailPanel } from "./components/DetailPanel/DetailPanel";
 import { ForecastModal } from "./components/ForecastModal/ForecastModal";
+import { AccountModal } from "./components/AccountModal/AccountModal";
+import { useFavorites } from "./hooks/useFavorites";
 import styles from "./App.module.css";
 
 export default function App() {
@@ -14,6 +16,8 @@ export default function App() {
     const [isForecastOpen, setIsForecastOpen] = useState(false);
     const [isPanelOpen, setIsPanelOpen] = useState(true);
     const [isAddingMode, setIsAddingMode] = useState(false);
+    const [isAccountOpen, setIsAccountOpen] = useState(false);
+    const { favorites, toggleFavorite } = useFavorites();
     const searchRef = useRef<HTMLInputElement>(null);
 
     const [isDark, setIsDark] = useState(() => {
@@ -28,9 +32,14 @@ export default function App() {
     }, [isDark]);
 
     const selectedStation = stations.find((s) => s.id === selectedId) ?? null;
-    const filteredStations = stations.filter((s) =>
-        s.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredStations = stations
+        .filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        .sort((a, b) => {
+            const aFav = favorites.has(a.id) ? 1 : 0;
+            const bFav = favorites.has(b.id) ? 1 : 0;
+            if (aFav !== bFav) return bFav - aFav;
+            return a.name.localeCompare(b.name);
+        });
 
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
@@ -39,7 +48,8 @@ export default function App() {
 
             switch (e.key) {
                 case "Escape":
-                    if (isForecastOpen) setIsForecastOpen(false);
+                    if (isAccountOpen) setIsAccountOpen(false);
+                    else if (isForecastOpen) setIsForecastOpen(false);
                     else if (isAddingMode) setIsAddingMode(false);
                     else if (selectedId !== null) {
                         setSelectedId(null);
@@ -68,7 +78,7 @@ export default function App() {
         };
         window.addEventListener("keydown", handler);
         return () => window.removeEventListener("keydown", handler);
-    }, [isForecastOpen, isAddingMode, selectedId, refetch]);
+    }, [isForecastOpen, isAddingMode, selectedId, isAccountOpen, refetch]);
 
     const showDetail = selectedId !== null;
     const showSidebar = !showDetail && isPanelOpen;
@@ -85,6 +95,7 @@ export default function App() {
                 onTogglePanel={() => setIsPanelOpen((prev) => !prev)}
                 isDark={isDark}
                 onToggleTheme={() => setIsDark((prev) => !prev)}
+                onOpenAccount={() => setIsAccountOpen(true)}
             />
             <main className={styles.main}>
                 <StationMap
@@ -109,6 +120,8 @@ export default function App() {
                     error={error}
                     onAddSpot={() => setIsAddingMode(true)}
                     isOpen={showSidebar}
+                    favorites={favorites}
+                    onToggleFavorite={toggleFavorite}
                 />
                 <DetailPanel
                     station={selectedStation}
@@ -118,6 +131,8 @@ export default function App() {
                         setSelectedId(null);
                         setIsPanelOpen(true);
                     }}
+                    isFavorite={selectedStation ? favorites.has(selectedStation.id) : false}
+                    onToggleFavorite={toggleFavorite}
                 />
             </main>
             {isForecastOpen && selectedStation && (
@@ -127,6 +142,7 @@ export default function App() {
                     station={selectedStation}
                 />
             )}
+            <AccountModal isOpen={isAccountOpen} onClose={() => setIsAccountOpen(false)} />
         </div>
     );
 }
