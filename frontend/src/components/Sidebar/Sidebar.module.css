@@ -26,7 +26,7 @@
     align-items: center;
     gap: 6px;
     padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
+    /* Removed border-bottom so there is no line separating search and results */
     flex-shrink: 0;
 }
 
@@ -87,10 +87,33 @@
     opacity: 0.9;
 }
 
+.toggleBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-xmuted);
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.toggleBtn:hover {
+    background: var(--border);
+    color: var(--text);
+}
+
 .list {
     flex: 1;
     overflow-y: auto;
     padding: 4px 0;
+}
+
+.listCollapsed {
+    display: none;
 }
 
 .row {
@@ -192,7 +215,7 @@
 
     .list {
         padding: 0;
-        border-top: 1px solid var(--border);
+        /* Removed border-top here too */
         max-height: 140px; /* roughly 3 list items tall */
         overflow-y: auto;
     }

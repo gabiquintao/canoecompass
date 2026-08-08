@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Station } from "../../types/api";
 import styles from "./Sidebar.module.css";
 import { ScoreBadge } from "../ScoreBadge/ScoreBadge";
@@ -25,6 +26,17 @@ export function Sidebar({
     onAddSpot,
     isOpen,
 }: Props) {
+    const [isListExpanded, setIsListExpanded] = useState(false);
+
+    const handleFocus = () => {
+        setIsListExpanded(true);
+    };
+
+    const handleSearchChange = (val: string) => {
+        onSearch(val);
+        if (val) setIsListExpanded(true);
+    };
+
     return (
         <aside className={`${styles.panel} ${!isOpen ? styles.closed : ""}`} aria-label="Station list">
             <div className={styles.search}>
@@ -49,7 +61,8 @@ export function Sidebar({
                     type="text"
                     placeholder="Search stations [/]"
                     value={searchQuery}
-                    onChange={(e) => onSearch(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onFocus={handleFocus}
                     className={styles.searchInput}
                     aria-label="Filter stations"
                 />
@@ -83,6 +96,30 @@ export function Sidebar({
                 >
                     +
                 </button>
+                <button
+                    className={styles.toggleBtn}
+                    onClick={() => setIsListExpanded(!isListExpanded)}
+                    title={isListExpanded ? "Hide results" : "Show results"}
+                    aria-label={isListExpanded ? "Hide results" : "Show results"}
+                    aria-expanded={isListExpanded}
+                >
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{
+                            transform: isListExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                            transition: "transform 0.2s ease"
+                        }}
+                    >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
             </div>
 
             {error && (
@@ -94,7 +131,7 @@ export function Sidebar({
                 </div>
             )}
 
-            <div className={styles.list} role="listbox" aria-label="Stations">
+            <div className={`${styles.list} ${!isListExpanded ? styles.listCollapsed : ""}`} role="listbox" aria-label="Stations">
                 {stations.length === 0 && (
                     <p className={styles.empty}>No stations match your search.</p>
                 )}
