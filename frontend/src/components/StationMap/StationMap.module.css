@@ -6,7 +6,7 @@
 .map {
     position: absolute;
     inset: 0;
-    transform: translateZ(0); /* GPU layer — helps iOS Safari render Leaflet tiles */
+    z-index: 0;
 }
 
 :global(.leaflet-tooltip) {
@@ -35,7 +35,6 @@
         right: 10px !important;
         bottom: auto !important;
         left: auto !important;
-        z-index: 1002 !important; /* above sidebar/topbar (1001) */
     }
 
     .addSpotBtn,

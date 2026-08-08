@@ -1,26 +1,16 @@
-/*
- * All top-level layout elements are position:fixed so their dimensions come
- * directly from viewport coordinates, not from a flex/percentage chain.
- * iOS Safari reliably resolves fixed + explicit top/bottom to concrete pixels,
- * whereas height:100% through a flex chain can silently resolve to 0.
- */
-
 .layout {
-    /* Just a background carrier — children are fixed and float above it. */
+    display: grid;
+    /* TopBar is auto height (38px), main content takes the rest (1fr) */
+    grid-template-rows: auto 1fr;
+    /* Use var(--vvh) managed by main.tsx for accurate iOS height */
+    height: var(--vvh, 100dvh);
     background: var(--bg);
+    padding-top: env(safe-area-inset-top, 0px);
+    overflow: hidden;
 }
 
 .main {
-    position: fixed;
-    /*
-     * Sit directly below the TopBar (38px) + any safe-area notch.
-     * Use --vvh (tracked by visualViewport in main.tsx) so this container
-     * shrinks when the iOS on-screen keyboard opens, keeping the search
-     * results list above the keyboard.
-     */
-    top: calc(38px + env(safe-area-inset-top, 0px));
-    left: 0;
-    right: 0;
-    height: calc(var(--vvh, 100dvh) - 38px - env(safe-area-inset-top, 0px));
+    position: relative;
     overflow: hidden;
+    /* No flex, no fixed positioning needed, grid handles the height */
 }

@@ -99,28 +99,26 @@ export default function App() {
                     isAddingMode={isAddingMode}
                     onSetAddingMode={setIsAddingMode}
                 />
-                {showSidebar && (
-                    <Sidebar
-                        stations={filteredStations}
-                        selectedId={selectedId}
-                        onSelect={setSelectedId}
-                        searchQuery={searchQuery}
-                        onSearch={setSearchQuery}
-                        searchRef={searchRef}
-                        error={error}
-                        onAddSpot={() => setIsAddingMode(true)}
-                    />
-                )}
-                {showDetail && selectedStation && (
-                    <DetailPanel
-                        station={selectedStation}
-                        onOpenForecast={() => setIsForecastOpen(true)}
-                        onBack={() => {
-                            setSelectedId(null);
-                            setIsPanelOpen(true);
-                        }}
-                    />
-                )}
+                <Sidebar
+                    stations={filteredStations}
+                    selectedId={selectedId}
+                    onSelect={setSelectedId}
+                    searchQuery={searchQuery}
+                    onSearch={setSearchQuery}
+                    searchRef={searchRef}
+                    error={error}
+                    onAddSpot={() => setIsAddingMode(true)}
+                    isOpen={showSidebar}
+                />
+                <DetailPanel
+                    station={selectedStation}
+                    isOpen={showDetail}
+                    onOpenForecast={() => setIsForecastOpen(true)}
+                    onBack={() => {
+                        setSelectedId(null);
+                        setIsPanelOpen(true);
+                    }}
+                />
             </main>
             {isForecastOpen && selectedStation && (
                 <ForecastModal
