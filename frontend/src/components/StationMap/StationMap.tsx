@@ -14,10 +14,8 @@ import styles from "./StationMap.module.css";
 import { AddStationModal } from "./AddStationModal";
 import type L from "leaflet";
 
-const PORTUGAL_BOUNDS: [[number, number], [number, number]] = [
-    [36.8, -9.8],
-    [42.2, -6.1],
-];
+const PORTUGAL_CENTER: [number, number] = [39.5, -8.0];
+const PORTUGAL_ZOOM = 6;
 
 function MapClickListener({
     onMapClick,
@@ -100,7 +98,8 @@ export function StationMap({
 
             <MapContainer
                 ref={(m) => { mapRef.current = m; }}
-                bounds={PORTUGAL_BOUNDS}
+                center={PORTUGAL_CENTER}
+                zoom={PORTUGAL_ZOOM}
                 className={styles.map}
                 zoomControl={false}
             >
