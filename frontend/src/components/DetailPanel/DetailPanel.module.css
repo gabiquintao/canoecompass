@@ -313,13 +313,13 @@
 
 .tideValHigh {
     color: var(--text);
-    font-family: var(--font-mono);
+    font-family: var(--mono);
     font-weight: 600;
 }
 
 .tideValLow {
     color: var(--text-muted);
-    font-family: var(--font-mono);
+    font-family: var(--mono);
     font-weight: 500;
 }
 
