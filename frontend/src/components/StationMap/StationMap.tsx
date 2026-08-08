@@ -65,10 +65,12 @@ export function StationMap({
     const mapRef = useRef<L.Map | null>(null);
 
     // After the map mounts, re-measure the container so tiles paint correctly on iOS.
+    // The timeout lets the visual viewport and browser chrome finish their layout pass first.
     useEffect(() => {
-        if (mapRef.current) {
-            mapRef.current.invalidateSize();
-        }
+        const id = setTimeout(() => {
+            mapRef.current?.invalidateSize();
+        }, 150);
+        return () => clearTimeout(id);
     }, []);
 
     const handleMapClick = (lat: number, lng: number) => {

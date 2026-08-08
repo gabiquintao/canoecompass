@@ -2,7 +2,10 @@
     position: absolute;
     inset: 0;
     overflow: hidden;
-    isolation: isolate; /* Creates a stacking context that contains Leaflet's z-indexes (200-1000) so they don't bleed above the TopBar/Sidebar */
+    z-index: 0; /* z-index on a positioned element creates a stacking context, keeping Leaflet's internal
+                   z-indexes (200-1000) contained so they don't bleed above the Sidebar (z-index:10)
+                   or TopBar (z-index:20). Using z-index:0 instead of isolation:isolate avoids a WebKit
+                   compositing bug that prevents Leaflet canvas tiles from painting on iOS Safari. */
 }
 
 .map {
