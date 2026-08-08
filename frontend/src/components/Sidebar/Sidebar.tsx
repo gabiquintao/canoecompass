@@ -13,6 +13,8 @@ interface Props {
     error: string | null;
     onAddSpot: () => void;
     isOpen: boolean;
+    favorites: Set<number>;
+    onToggleFavorite: (id: number) => void;
 }
 
 export function Sidebar({
@@ -25,6 +27,8 @@ export function Sidebar({
     error,
     onAddSpot,
     isOpen,
+    favorites,
+    onToggleFavorite,
 }: Props) {
     const [isListExpanded, setIsListExpanded] = useState(false);
 
@@ -38,7 +42,10 @@ export function Sidebar({
     };
 
     return (
-        <aside className={`${styles.panel} ${!isOpen ? styles.closed : ""}`} aria-label="Station list">
+        <aside
+            className={`${styles.panel} ${!isOpen ? styles.closed : ""}`}
+            aria-label="Station list"
+        >
             <div className={styles.search}>
                 <svg
                     className={styles.searchIcon}
@@ -114,7 +121,7 @@ export function Sidebar({
                         strokeLinejoin="round"
                         style={{
                             transform: isListExpanded ? "rotate(180deg)" : "rotate(0deg)",
-                            transition: "transform 0.2s ease"
+                            transition: "transform 0.2s ease",
                         }}
                     >
                         <polyline points="6 9 12 15 18 9"></polyline>
@@ -131,25 +138,66 @@ export function Sidebar({
                 </div>
             )}
 
-            <div className={`${styles.list} ${!isListExpanded ? styles.listCollapsed : ""}`} role="listbox" aria-label="Stations">
+            <div
+                className={`${styles.list} ${!isListExpanded ? styles.listCollapsed : ""}`}
+                role="listbox"
+                aria-label="Stations"
+            >
                 {stations.length === 0 && (
                     <p className={styles.empty}>No stations match your search.</p>
                 )}
                 {stations.map((s) => {
                     return (
-                        <button
+                        <div
                             key={s.id}
                             role="option"
                             aria-selected={s.id === selectedId}
                             className={`${styles.row} ${s.id === selectedId ? styles.rowActive : ""}`}
                             onClick={() => onSelect(s.id)}
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                    onSelect(s.id);
+                                    e.preventDefault();
+                                }
+                            }}
                         >
                             <span className={styles.rowBody}>
                                 <span className={styles.name}>{s.name}</span>
                                 <span className={styles.type}>{s.type.toLowerCase()}</span>
                             </span>
-                            <ScoreBadge score={s.final_score} />
-                        </button>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <button
+                                    className={styles.favBtn}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onToggleFavorite(s.id);
+                                    }}
+                                    title={
+                                        favorites.has(s.id) ? "Remove favorite" : "Add to favorites"
+                                    }
+                                    style={{
+                                        background: "none",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        padding: 0,
+                                        display: "flex",
+                                    }}
+                                >
+                                    <svg
+                                        width="14"
+                                        height="14"
+                                        fill={favorites.has(s.id) ? "var(--accent-color)" : "none"}
+                                        stroke="var(--text-secondary)"
+                                        strokeWidth="2"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                    </svg>
+                                </button>
+                                <ScoreBadge score={s.final_score} />
+                            </div>
+                        </div>
                     );
                 })}
             </div>

@@ -11,6 +11,8 @@ import {
     ResponsiveContainer,
 } from "recharts";
 import { useStationForecast } from "../../hooks/useStationForecast";
+import { useTimezone } from "../../hooks/useTimezone";
+import { formatTimestamp } from "../../lib/timeUtils";
 
 import { useState, useEffect } from "react";
 
@@ -47,6 +49,7 @@ function formatDayHeading(dateStr: string, index: number): string {
 
 export function ForecastModal({ station, isOpen = false, onClose }: Props) {
     const { forecasts, loading, error } = useStationForecast(station?.id ?? null);
+    const { timezone } = useTimezone();
 
     const [selectedDay, setSelectedDay] = useState("");
     const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
@@ -68,7 +71,7 @@ export function ForecastModal({ station, isOpen = false, onClose }: Props) {
     const lows = summary?.low_tides ?? [];
     const bestHour = summary?.best_paddling_window ?? null;
     const chartData = dayHours.map((h) => ({
-        time: h.timestamp.slice(11, 16),
+        time: formatTimestamp(h.timestamp, timezone),
         wind: h.wind_speed_kmh ?? null,
         gust: h.wind_gust_kmh ?? null,
         level: isRiver ? (h.flow_rate_m3s ?? null) : isTidal ? (h.tide_level_m ?? null) : null,
@@ -230,7 +233,7 @@ export function ForecastModal({ station, isOpen = false, onClose }: Props) {
                                         <h4 className={styles.summaryTitle}>
                                             {bestHour?.start_time && bestHour?.end_time
                                                 ? `${bestHour.start_time} - ${bestHour.end_time}`
-                                                : `At ${bestHour?.peak_hour.timestamp.slice(11, 16) ?? "—"}`}
+                                                : `At ${bestHour?.peak_hour.timestamp ? formatTimestamp(bestHour.peak_hour.timestamp, timezone) : "—"}`}
                                         </h4>
                                     </div>
                                 </div>
@@ -384,7 +387,7 @@ export function ForecastModal({ station, isOpen = false, onClose }: Props) {
                                     {dayHours.map((h) => (
                                         <tr key={h.timestamp}>
                                             <td className={styles.mono} data-label="Hour">
-                                                {h.timestamp.slice(11, 16)}
+                                                {formatTimestamp(h.timestamp, timezone)}
                                             </td>
                                             <td
                                                 className={`${styles.mono} ${styles.numCol}`}

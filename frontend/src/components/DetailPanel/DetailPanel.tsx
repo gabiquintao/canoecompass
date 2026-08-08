@@ -3,6 +3,8 @@ import { SCORE_META } from "../../constants/scores";
 import styles from "./DetailPanel.module.css";
 import { useStationHistory } from "../../hooks/useStationHistory";
 import { useStationForecast } from "../../hooks/useStationForecast";
+import { useTimezone } from "../../hooks/useTimezone";
+import { formatTimestamp } from "../../lib/timeUtils";
 
 import { InfoTooltip } from "../Tooltip/Tooltip";
 
@@ -14,6 +16,8 @@ interface Props {
     isOpen: boolean;
     onOpenForecast: () => void;
     onBack: () => void;
+    isFavorite: boolean;
+    onToggleFavorite: (id: number) => void;
 }
 
 function arcPath(cx: number, cy: number, r: number, startDeg: number, endDeg: number): string {
@@ -221,9 +225,21 @@ function ExtraMetrics({ station }: { station: Station }) {
     );
 }
 
-export function DetailPanel({ station, isOpen, onOpenForecast, onBack }: Props) {
-    const { history, loading: historyLoading, error: historyError } = useStationHistory(station?.id ?? 0);
-    const { forecasts } = useStationForecast(station?.id ?? 0);
+export function DetailPanel({
+    station,
+    isOpen,
+    onOpenForecast,
+    onBack,
+    isFavorite,
+    onToggleFavorite,
+}: Props) {
+    const {
+        history,
+        loading: historyLoading,
+        error: historyError,
+    } = useStationHistory(station?.id ?? null);
+    const { forecasts } = useStationForecast(station?.id ?? null);
+    const { timezone } = useTimezone();
     const isTidal =
         station?.type === "ESTUARY" || station?.type === "LAGOON" || station?.type === "COASTAL";
     const isRiver = station?.type === "RIVER";
@@ -239,7 +255,10 @@ export function DetailPanel({ station, isOpen, onOpenForecast, onBack }: Props) 
     }
 
     return (
-        <section className={`${styles.panel} ${!isOpen ? styles.closed : ""}`} aria-label="Station detail">
+        <section
+            className={`${styles.panel} ${!isOpen ? styles.closed : ""}`}
+            aria-label="Station detail"
+        >
             <div className={styles.header}>
                 <button
                     className={styles.backBtn}
@@ -263,7 +282,33 @@ export function DetailPanel({ station, isOpen, onOpenForecast, onBack }: Props) 
                 </button>
                 <div className={styles.headerText}>
                     <div className={styles.nameColumn}>
-                        <h2 className={styles.stationName}>{station.name}</h2>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <h2 className={styles.stationName}>{station.name}</h2>
+                            <button
+                                onClick={() => onToggleFavorite(station.id)}
+                                title={isFavorite ? "Remove favorite" : "Add to favorites"}
+                                style={{
+                                    background: "none",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    padding: "2px",
+                                    display: "flex",
+                                }}
+                            >
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    fill={isFavorite ? "var(--accent-color)" : "none"}
+                                    stroke={
+                                        isFavorite ? "var(--accent-color)" : "var(--text-secondary)"
+                                    }
+                                    strokeWidth="2"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
                         <span className={styles.stationType}>{station.type.toLowerCase()}</span>
                     </div>
                     <ScoreBadge score={station.final_score} />
@@ -339,7 +384,7 @@ export function DetailPanel({ station, isOpen, onOpenForecast, onBack }: Props) 
                                             {bestWindow.start_time} - {bestWindow.end_time}
                                         </>
                                     ) : (
-                                        `At ${bestWindow?.peak_hour.timestamp.slice(11, 16) ?? "—"}`
+                                        `At ${bestWindow?.peak_hour.timestamp ? formatTimestamp(bestWindow.peak_hour.timestamp, timezone) : "—"}`
                                     )}
                                 </div>
                             </div>
