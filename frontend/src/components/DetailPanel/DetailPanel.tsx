@@ -298,9 +298,9 @@ export function DetailPanel({
                                 <svg
                                     width="18"
                                     height="18"
-                                    fill={isFavorite ? "var(--accent-color)" : "none"}
+                                    fill={isFavorite ? "#eab308" : "none"}
                                     stroke={
-                                        isFavorite ? "var(--accent-color)" : "var(--text-secondary)"
+                                        isFavorite ? "#eab308" : "var(--text-xmuted)"
                                     }
                                     strokeWidth="2"
                                     viewBox="0 0 24 24"

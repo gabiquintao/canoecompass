@@ -187,8 +187,8 @@ export function Sidebar({
                                     <svg
                                         width="14"
                                         height="14"
-                                        fill={favorites.has(s.id) ? "var(--accent-color)" : "none"}
-                                        stroke="var(--text-secondary)"
+                                        fill={favorites.has(s.id) ? "#eab308" : "none"}
+                                        stroke={favorites.has(s.id) ? "#eab308" : "var(--text-xmuted)"}
                                         strokeWidth="2"
                                         viewBox="0 0 24 24"
                                     >
