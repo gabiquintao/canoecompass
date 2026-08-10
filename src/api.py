@@ -59,6 +59,9 @@ def update_weather_data() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     scheduler = BackgroundScheduler()
+    # Run immediately on startup
+    scheduler.add_job(update_weather_data)
+    # Then schedule every 6 hours
     scheduler.add_job(update_weather_data, "interval", hours=6)
     scheduler.start()
     logger.info("Background weather scheduler started.")

@@ -369,7 +369,7 @@ export function DetailPanel({
                         <div className={styles.highlightCard}>
                             <div className={styles.highlightHeader}>
                                 <span className={styles.highlightTitle}>
-                                    Best Paddling Window Today
+                                    Best Paddling {isRiver ? "Hour" : "Window"} Today
                                 </span>
                                 <InfoTooltip content="The best time window today for canoeing based on tide level, wind speed, gusts, and wave conditions." />
                             </div>

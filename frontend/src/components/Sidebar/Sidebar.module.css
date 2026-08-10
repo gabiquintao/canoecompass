@@ -112,9 +112,6 @@
     padding: 4px 0;
 }
 
-.listCollapsed {
-    display: none;
-}
 
 .row {
     display: flex;
@@ -222,5 +219,9 @@
         /* Removed border-top here too */
         max-height: 140px; /* roughly 3 list items tall */
         overflow-y: auto;
+    }
+
+    .listCollapsed {
+        display: none;
     }
 }
