@@ -61,7 +61,7 @@ const SIDEBAR_SECTIONS = [
     }
 ];
 
-export function DocsSidebar() {
+export function DocsSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
     const [activeId, setActiveId] = useState<string>("");
     const activeIdRef = useRef(activeId);
     
@@ -133,7 +133,7 @@ export function DocsSidebar() {
 
     return (
         <nav className={styles.sidebarNav}>
-            {SIDEBAR_SECTIONS.map((section, idx) => (
+            {SIDEBAR_SECTIONS.map((section) => (
                 <div key={section.title}>
                     <div className="nav-section-label">
                         {section.title}
@@ -152,7 +152,8 @@ export function DocsSidebar() {
                                     const wrapper = document.getElementById('docs-content-wrapper');
                                     if (target && wrapper) {
                                         // Update URL hash without jumping
-                                        window.history.pushState(null, "", `/docs#${link.id}`);
+                                        window.history.pushState(null, '', `#${link.id}`);
+                                        if (onLinkClick) onLinkClick();
                                         
                                         // Calculate exact position to scroll to
                                         const wrapperRect = wrapper.getBoundingClientRect();

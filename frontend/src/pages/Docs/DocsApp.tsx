@@ -28,6 +28,8 @@ export function DocsApp() {
         document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
     };
 
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     return (
         <div className={styles.layout}>
             <TopBar
@@ -45,8 +47,35 @@ export function DocsApp() {
             />
             <main className={styles.main}>
                 <div className={styles.container}>
-                    <aside id="docs-sidebar-wrapper" className={styles.sidebar}>
-                        <DocsSidebar />
+                    {/* Mobile Menu Toggle */}
+                    <div className={styles.mobileNav}>
+                        <button 
+                            className={styles.menuBtn} 
+                            onClick={() => setIsSidebarOpen(true)}
+                            aria-label="Open Table of Contents"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                            </svg>
+                            <span>Table of Contents</span>
+                        </button>
+                    </div>
+
+                    {/* Mobile Backdrop */}
+                    {isSidebarOpen && (
+                        <div 
+                            className={styles.sidebarBackdrop} 
+                            onClick={() => setIsSidebarOpen(false)} 
+                        />
+                    )}
+
+                    <aside 
+                        id="docs-sidebar-wrapper" 
+                        className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}
+                    >
+                        <DocsSidebar onLinkClick={() => setIsSidebarOpen(false)} />
                     </aside>
 
                     <section id="docs-content-wrapper" className={styles.contentWrapper}>
