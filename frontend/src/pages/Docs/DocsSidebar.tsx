@@ -135,10 +135,7 @@ export function DocsSidebar() {
         <nav className={styles.sidebarNav}>
             {SIDEBAR_SECTIONS.map((section, idx) => (
                 <div key={section.title}>
-                    <div 
-                        className="nav-section-label" 
-                        style={idx === 0 ? { marginTop: 0, paddingTop: 0 } : undefined}
-                    >
+                    <div className="nav-section-label">
                         {section.title}
                     </div>
                     {section.links.map(link => {
