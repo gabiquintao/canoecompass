@@ -56,14 +56,14 @@ flowchart TD
       <tr><td>ORM</td><td>SQLAlchemy</td><td>2.0.51</td><td>Declarative models, sessions</td></tr>
       <tr><td>Database</td><td>PostgreSQL + PostGIS</td><td>15</td><td>Persistent station + observation data</td></tr>
       <tr><td>DB driver</td><td>psycopg2-binary</td><td>2.9.12</td><td>Python ↔ PostgreSQL wire protocol</td></tr>
-      <tr><td>Auth</td><td>Supabase</td><td>2.9</td><td>JWT-based user auth &amp; sessions</td></tr>
+      <tr><td>Auth</td><td>Supabase</td><td>2.9</td><td>JWT-based user auth & sessions</td></tr>
       <tr><td>Scheduling</td><td>APScheduler</td><td>3.11</td><td>6-hour background data refresh</td></tr>
       <tr><td>Rate limiting</td><td>slowapi</td><td>0.1.10</td><td>Per-IP request throttling</td></tr>
       <tr><td>Data validation</td><td>Pydantic v2</td><td>2.13</td><td>Request/response schemas</td></tr>
       <tr><td>External data</td><td>Open-Meteo APIs</td><td>—</td><td>Wind, river discharge, marine</td></tr>
       <tr><td>Frontend framework</td><td>React</td><td>19.2</td><td>UI components</td></tr>
       <tr><td>Language</td><td>TypeScript</td><td>5.x</td><td>Type-safe frontend</td></tr>
-      <tr><td>Bundler</td><td>Vite</td><td>8.1</td><td>Dev server &amp; production build</td></tr>
+      <tr><td>Bundler</td><td>Vite</td><td>8.1</td><td>Dev server & production build</td></tr>
       <tr><td>Map</td><td>Leaflet + react-leaflet</td><td>1.9 / 5.0</td><td>Interactive map with station markers</td></tr>
       <tr><td>Charts</td><td>Recharts</td><td>3.9</td><td>Historical data line charts</td></tr>
       <tr><td>CSS</td><td>CSS Modules</td><td>—</td><td>Scoped component styles</td></tr>
@@ -104,7 +104,7 @@ app = FastAPI(title=<span class="str">"Canoeing Navigability API"</span>, lifesp
   </ul>
 
   <h3>Database session injection</h3>
-  <pre><code><span class="kw">def</span> <span class="fn">get_db</span>() -&gt; Generator[Session, None, None]:
+  <pre><code><span class="kw">def</span> <span class="fn">get_db</span>() -> Generator[Session, None, None]:
     db = SessionLocal()
     <span class="kw">try</span>:
         <span class="kw">yield</span> db
@@ -120,7 +120,7 @@ app = FastAPI(title=<span class="str">"Canoeing Navigability API"</span>, lifesp
   <ol>
     <li>A subquery finds <code>MAX(date)</code> per <code>water_body_id</code> across <code>data_observations</code>.</li>
     <li>A join retrieves only the matching rows (latest observation per station) in one SQL round-trip.</li>
-    <li>A second query pulls all <code>hourly_forecasts</code> with <code>timestamp &gt;= now_hour</code> and selects the first (earliest upcoming) row per station into a dict.</li>
+    <li>A second query pulls all <code>hourly_forecasts</code> with <code>timestamp >= now_hour</code> and selects the first (earliest upcoming) row per station into a dict.</li>
     <li>The inner closure <code>get_val(attr)</code> prefers the hourly forecast value over the historical observation, enabling seamless fallback.</li>
     <li>Each station is then passed through <code>evaluate_water_body()</code> from <code>navigability.py</code>.</li>
   </ol>
@@ -202,7 +202,7 @@ app = FastAPI(title=<span class="str">"Canoeing Navigability API"</span>, lifesp
     </table>
   </div>
 
-  <h3>User &amp; UserFavorite</h3>
+  <h3>User & UserFavorite</h3>
   <div class="card">
     <p><strong>User</strong>: primary key is the Supabase UUID string (<code>id: str</code>). Stores timezone preference. Created on first auth, auto-upserted on JWT validation.</p>
     <p><strong>UserFavorite</strong>: junction table. Unique constraint on <code>(user_id, water_body_id)</code>. No cascade required — deleting a station does not delete user rows in production; that logic is handled by DB FK rules.</p>
@@ -269,19 +269,19 @@ app = FastAPI(title=<span class="str">"Canoeing Navigability API"</span>, lifesp
 
   <h3>evaluate_river(wb, obs, flow)</h3>
   <pre><code><span class="comment"># Thresholds from calibration (15th / 80th / 95th discharge percentiles)</span>
-<span class="kw">if</span> flow &gt;= f_danger:  <span class="op">return</span> DANGEROUS
-<span class="kw">if</span> flow &lt;  f_min <span class="op">or</span> flow &gt; f_max:  <span class="op">return</span> POOR
-<span class="kw">if</span> flow &lt;= f_min + (f_max - f_min) * <span class="num">0.6</span>:  <span class="op">return</span> EXCELLENT
+<span class="kw">if</span> flow >= f_danger:  <span class="op">return</span> DANGEROUS
+<span class="kw">if</span> flow <  f_min <span class="op">or</span> flow > f_max:  <span class="op">return</span> POOR
+<span class="kw">if</span> flow <= f_min + (f_max - f_min) * <span class="num">0.6</span>:  <span class="op">return</span> EXCELLENT
 <span class="op">return</span> GOOD</code></pre>
   <p>
-    Returns <code>UNKNOWN</code> when any threshold is <code>None</code> or when <code>flow_max &lt; 1.0</code>
+    Returns <code>UNKNOWN</code> when any threshold is <code>None</code> or when <code>flow_max < 1.0</code>
     (which signals the Open-Meteo Flood API returned negligible data for the coordinate — e.g.
     a coastal body entered as RIVER type, or a location with no upstream catchment).
   </p>
 
   <h3>evaluate_estuary(wb, obs, tide)</h3>
-  <pre><code><span class="kw">if</span> tide &lt; t_min:  <span class="op">return</span> POOR      <span class="comment"># below 50th-percentile sea level → too shallow</span>
-<span class="kw">if</span> tide &lt; t_max:  <span class="op">return</span> GOOD      <span class="comment"># between 50th and 92nd percentile</span>
+  <pre><code><span class="kw">if</span> tide < t_min:  <span class="op">return</span> POOR      <span class="comment"># below 50th-percentile sea level → too shallow</span>
+<span class="kw">if</span> tide < t_max:  <span class="op">return</span> GOOD      <span class="comment"># between 50th and 92nd percentile</span>
 <span class="op">return</span> EXCELLENT                   <span class="comment"># above 92nd percentile → deep water</span></code></pre>
 
   <h3>evaluate_wind(obs, wind)</h3>
@@ -289,7 +289,7 @@ app = FastAPI(title=<span class="str">"Canoeing Navigability API"</span>, lifesp
   <table>
     <thead><tr><th>Wind Speed</th><th>Score</th></tr></thead>
     <tbody>
-      <tr><td>&gt; 40 km/h</td><td><span class="badge badge-score s-dangerous">DANGEROUS</span></td></tr>
+      <tr><td>> 40 km/h</td><td><span class="badge badge-score s-dangerous">DANGEROUS</span></td></tr>
       <tr><td>25–40 km/h</td><td><span class="badge badge-score s-poor">POOR</span></td></tr>
       <tr><td>15–25 km/h</td><td><span class="badge badge-score s-good">GOOD</span></td></tr>
       <tr><td>≤ 15 km/h</td><td><span class="badge badge-score s-excellent">EXCELLENT</span></td></tr>
@@ -324,11 +324,11 @@ app = FastAPI(title=<span class="str">"Canoeing Navigability API"</span>, lifesp
     <code>"YYYY-MM-DD"</code> with sub-keys <code>"highs"</code> and <code>"lows"</code>.
   </p>
   <pre><code><span class="comment"># High tide: current > previous AND current >= next</span>
-<span class="kw">if</span> curr &gt; prev_h <span class="kw">and</span> curr &gt;= next_h:
+<span class="kw">if</span> curr > prev_h <span class="kw">and</span> curr >= next_h:
     peaks_by_day[day_str][<span class="str">"highs"</span>].append(TidalPeak(time=time, level=curr))
 
 <span class="comment"># Low tide: current < previous AND current <= next</span>
-<span class="kw">elif</span> curr &lt; prev_l <span class="kw">and</span> curr &lt;= next_l:
+<span class="kw">elif</span> curr < prev_l <span class="kw">and</span> curr <= next_l:
     peaks_by_day[day_str][<span class="str">"lows"</span>].append(TidalPeak(time=time, level=curr))</code></pre>
 
   <h3>find_best_paddling_window(hours, is_tidal)</h3>
@@ -358,7 +358,7 @@ wb.flow_max    = get_percentile(flows, <span class="num">80</span>)   <span clas
 wb.flow_danger = get_percentile(flows, <span class="num">95</span>)   <span class="comment"># flood/danger threshold</span>
 
 <span class="comment"># If max < 1.0 m³/s — negligible model data — clear all thresholds</span>
-<span class="kw">if</span> current_max <span class="op">is not</span> None <span class="kw">and</span> current_max &lt; <span class="num">1.0</span>:
+<span class="kw">if</span> current_max <span class="op">is not</span> None <span class="kw">and</span> current_max < <span class="num">1.0</span>:
     wb.flow_min = wb.flow_max = wb.flow_danger = None</code></pre>
 
   <p><strong>Tidal types</strong> (ESTUARY, LAGOON, COASTAL) — fetches 30 days of hourly <code>sea_level_height_msl</code> from the Open-Meteo Marine API:</p>
@@ -412,7 +412,7 @@ wb.tide_max_m = get_percentile(sea_levels, <span class="num">92</span>)</code></
 
   <p>
     JWT-based authentication via the Supabase Python SDK. FastAPI's <code>HTTPBearer</code> security
-    scheme extracts the token from the <code>Authorization: Bearer &lt;token&gt;</code> header.
+    scheme extracts the token from the <code>Authorization: Bearer <token></code> header.
   </p>
 
   <h3>get_current_user_id(credentials)</h3>
@@ -433,12 +433,12 @@ user_id = user_response.user.id          <span class="comment"># Supabase UUID s
   </p>
 
 <!-- ─────────────────────────────────────────────── -->
-  <h2 id="helpers">Helpers &amp; Utils</h2>
+  <h2 id="helpers">Helpers & Utils</h2>
 
   <h3>helpers.py</h3>
   <pre><code>TIDAL_TYPES = {WaterBodyType.ESTUARY, WaterBodyType.LAGOON, WaterBodyType.COASTAL}
 
-<span class="kw">def</span> <span class="fn">is_tidal</span>(wb: WaterBody) -&gt; bool:
+<span class="kw">def</span> <span class="fn">is_tidal</span>(wb: WaterBody) -> bool:
     <span class="kw">return</span> wb.type <span class="kw">in</span> TIDAL_TYPES</code></pre>
   <p>Single shared predicate used throughout the backend to branch logic between tidal and non-tidal water bodies.</p>
 
@@ -556,7 +556,7 @@ user_id = user_response.user.id          <span class="comment"># Supabase UUID s
   </div>
 
   <h2 id="api-auth">API Reference: Authenticated Endpoints</h2>
-  <p>All require <code>Authorization: Bearer &lt;supabase_jwt&gt;</code>. On valid JWT, the user row is auto-created if not present.</p>
+  <p>All require <code>Authorization: Bearer <supabase_jwt></code>. On valid JWT, the user row is auto-created if not present.</p>
 
   <div class="endpoint">
     <div class="endpoint-header">
@@ -626,7 +626,7 @@ user_id = user_response.user.id          <span class="comment"># Supabase UUID s
   </table>
 
 <!-- ══════════════════ FRONTEND ══════════════════ -->
-  <h2 id="frontend-entry">Frontend: Entry &amp; Bootstrap</h2>
+  <h2 id="frontend-entry">Frontend: Entry & Bootstrap</h2>
 
   <h3>main.tsx</h3>
   <p>
@@ -639,11 +639,11 @@ window.visualViewport.addEventListener(<span class="str">"resize"</span>, syncVi
 window.addEventListener(<span class="str">"resize"</span>, syncVisualViewport)
 
 createRoot(root).render(
-  &lt;StrictMode&gt;
-    &lt;AuthProvider&gt;
-      &lt;App /&gt;
-    &lt;/AuthProvider&gt;
-  &lt;/StrictMode&gt;
+  <StrictMode>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </StrictMode>
 )</code></pre>
 
   <h3>supabase.ts</h3>
@@ -714,7 +714,7 @@ createRoot(root).render(
   <h3>useFavorites</h3>
   <p>
     Loads favourites when <code>user</code> is non-null; clears to empty set on logout. Implements
-    <strong>optimistic updates</strong>: the local <code>Set&lt;number&gt;</code> is toggled immediately,
+    <strong>optimistic updates</strong>: the local <code>Set<number></code> is toggled immediately,
     then the API call is made. If the API call fails, the set is reverted.
   </p>
 
@@ -724,7 +724,7 @@ createRoot(root).render(
     re-runs when <code>stationId</code> changes. Returns <code>{ forecasts, loading, error }</code>.
   </p>
 
-  <h3>useAsyncQuery&lt;T&gt;(initial, fetcher)</h3>
+  <h3>useAsyncQuery<T>(initial, fetcher)</h3>
   <p>
     Generic async data fetching hook. Accepts a nullable <code>fetcher</code> — when <code>null</code>,
     no request is made and <code>loading</code> is <code>false</code>. Uses a <code>cancelled</code>
@@ -815,23 +815,23 @@ UNKNOWN    → <span style="color:#7b869a">hsl(220,  8%, 56%)</span></code></pre
 
   <p>
     A thin typed wrapper over the native <code>fetch</code> API. Every call goes through the internal
-    <code>request&lt;T&gt;(path, options)</code> function:
+    <code>request<T>(path, options)</code> function:
   </p>
   <ol>
     <li>Retrieves the current Supabase session.</li>
-    <li>Injects <code>Authorization: Bearer &lt;token&gt;</code> if a session exists.</li>
+    <li>Injects <code>Authorization: Bearer <token></code> if a session exists.</li>
     <li>Fetches <code>BASE_URL + path</code> (defaults to <code>http://localhost:8000</code>).</li>
     <li>On non-OK status, parses the FastAPI <code>detail</code> field (string or array) for a human-readable error message and throws.</li>
-    <li>Returns <code>res.json() as Promise&lt;T&gt;</code>.</li>
+    <li>Returns <code>res.json() as Promise<T></code>.</li>
   </ol>
 
   <h3>Forecast cache</h3>
-  <pre><code><span class="kw">const</span> forecastCache = <span class="kw">new</span> Map&lt;number, { data: ForecastResponse; timestamp: number }&gt;();
+  <pre><code><span class="kw">const</span> forecastCache = <span class="kw">new</span> Map<number, { data: ForecastResponse; timestamp: number }>();
 <span class="kw">const</span> CACHE_TTL = <span class="num">1000</span> * <span class="num">60</span> * <span class="num">5</span>;  <span class="comment">// 5 minutes</span>
 
-<span class="fn">getStationForecast</span>: <span class="kw">async</span> (stationId) =&gt; {
+<span class="fn">getStationForecast</span>: <span class="kw">async</span> (stationId) => {
     <span class="kw">const</span> cached = forecastCache.get(stationId);
-    <span class="kw">if</span> (cached &amp;&amp; Date.now() - cached.timestamp &lt; CACHE_TTL) <span class="kw">return</span> cached.data;
+    <span class="kw">if</span> (cached && Date.now() - cached.timestamp < CACHE_TTL) <span class="kw">return</span> cached.data;
     <span class="kw">const</span> data = <span class="kw">await</span> request(...);
     forecastCache.set(stationId, { data, timestamp: Date.now() });
     <span class="kw">return</span> data;
@@ -875,7 +875,7 @@ flowchart TD
     Eval --> upsert1[(DataObservation)]
     Fore --> upsert2[(HourlyForecast)]
 
-    API[POST /api/stations] --> Val[Validate &amp; check 500m proximity]
+    API[POST /api/stations] --> Val[Validate & check 500m proximity]
     Val --> Nom[get_location_details]
     Nom --> Ins[(insert WaterBody)]
     Ins --> Cal[calibrate_station_thresholds]
@@ -890,34 +890,34 @@ flowchart TD
   <p>Rivers are evaluated based on historical flow discharge percentiles.</p>
   ```mermaid
 flowchart LR
-    Riv[Flow Evaluation] --> RMiss[missing / max &lt; 1.0] --> U1[UNKNOWN]
-    Riv --> RDang[flow &gt;= 95th pct] --> D1[DANGEROUS]
-    Riv --> RPoor[flow &lt; 15th pct OR &gt; 80th pct] --> P1[POOR]
-    Riv --> RExc[flow &lt;= min + 60% range] --> E1[EXCELLENT]
+    Riv[Flow Evaluation] --> RMiss[missing / max < 1.0] --> U1[UNKNOWN]
+    Riv --> RDang[flow >= 95th pct] --> D1[DANGEROUS]
+    Riv --> RPoor[flow < 15th pct OR > 80th pct] --> P1[POOR]
+    Riv --> RExc[flow <= min + 60% range] --> E1[EXCELLENT]
     Riv --> RGood[otherwise] --> G1[GOOD]
 
     Riv --> Wind[Wind Evaluation]
 ```
 
-  <h3>2. Estuaries &amp; Lagoons</h3>
+  <h3>2. Estuaries & Lagoons</h3>
   <p>Tidal bodies are evaluated based on tidal heights and peaks.</p>
   ```mermaid
 flowchart LR
     Tide[Tide Evaluation] --> TMiss[missing data] --> U2[UNKNOWN]
-    Tide --> TPoor[tide &lt; 50th pct] --> P2[POOR]
-    Tide --> TGood[tide &lt; 92nd pct] --> G2[GOOD]
-    Tide --> TExc[tide &gt;= 92nd pct] --> E2[EXCELLENT]
+    Tide --> TPoor[tide < 50th pct] --> P2[POOR]
+    Tide --> TGood[tide < 92nd pct] --> G2[GOOD]
+    Tide --> TExc[tide >= 92nd pct] --> E2[EXCELLENT]
 
     Tide --> Wind[Wind Evaluation]
 ```
 
-  <h3>3. Coastal &amp; Reservoirs / Wind Evaluation</h3>
+  <h3>3. Coastal & Reservoirs / Wind Evaluation</h3>
   <p>All stations undergo a final wind evaluation step. For coastal waters and reservoirs, this is the <em>only</em> metric evaluated.</p>
   ```mermaid
 flowchart LR
-    Wind[Wind Evaluation] --> WD[&gt; 40 km/h] --> D3[DANGEROUS]
-    Wind --> WP[&gt; 25 km/h] --> P3[POOR]
-    Wind --> WE[&lt;= 15 km/h] --> E3[EXCELLENT]
+    Wind[Wind Evaluation] --> WD[> 40 km/h] --> D3[DANGEROUS]
+    Wind --> WP[> 25 km/h] --> P3[POOR]
+    Wind --> WE[<= 15 km/h] --> E3[EXCELLENT]
     Wind --> WG[15-25 km/h] --> G3[GOOD]
 ```
 
@@ -996,7 +996,7 @@ uvicorn src.api:app --reload --port 8000</code></pre>
 npm install
 npm run dev                     <span class="comment"># Vite dev server → http://localhost:5173</span></code></pre>
 
-  <h3>Seed &amp; Reset scripts</h3>
+  <h3>Seed & Reset scripts</h3>
   <p><code>src/seed.py</code> — inserts a predefined set of water bodies with calibrated thresholds for demo purposes. <code>src/reset_db.py</code> — drops and recreates all tables.</p>
 
 `;
