@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import mermaid from "mermaid";
 import { TopBar } from "../../components/TopBar/TopBar";
 import styles from "./DocsApp.module.css";
 import { DocsSidebar } from "./DocsSidebar";
@@ -8,11 +7,6 @@ import { DocsContent } from "./DocsContent";
 
 export function DocsApp() {
     const location = useLocation();
-
-    useEffect(() => {
-        mermaid.initialize({ startOnLoad: false, theme: "neutral" });
-        mermaid.run({ querySelector: ".mermaid" }).catch(console.error);
-    }, []);
 
     useEffect(() => {
         if (location.hash) {
@@ -57,7 +51,7 @@ export function DocsApp() {
 
                     <section id="docs-content-wrapper" className={styles.contentWrapper}>
                         <div className={styles.content}>
-                            <DocsContent />
+                            <DocsContent isDark={isDark} />
                         </div>
                     </section>
                 </div>
