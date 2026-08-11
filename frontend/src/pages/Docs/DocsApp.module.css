@@ -1,0 +1,260 @@
+.layout {
+    display: flex;
+    flex-direction: column;
+    height: var(--vvh, 100dvh);
+    background: var(--bg);
+    overflow: hidden;
+    color: var(--text);
+}
+
+.main {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--bg);
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    max-width: 1100px; /* narrowed for 2 columns */
+}
+
+.sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    padding: 32px 24px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+.contentWrapper {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    padding: 32px 24px; /* match sidebar padding for symmetry */
+}
+
+.contentWrapper::-webkit-scrollbar {
+    display: none;
+}
+
+.contentWrapper {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.content {
+    max-width: 800px;
+    width: 100%;
+    padding-bottom: 25vh;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    .sidebar {
+        width: 100%;
+        max-height: 250px;
+        border-bottom: 1px solid var(--border);
+        padding: 16px 24px;
+    }
+    .contentWrapper {
+        padding: 24px;
+    }
+}
+
+.toc {
+    width: 240px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    padding: 32px 24px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.toc::-webkit-scrollbar {
+    display: none;
+}
+
+/* Typography styles matching typical docs site */
+.content :global(h1) {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5em;
+    color: var(--text);
+}
+
+.content :global(h2) {
+    font-size: 20px;
+    font-weight: 600;
+    margin-top: 48px;
+    margin-bottom: 24px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+}
+
+.content :global(h2),
+.content :global(h3),
+.content :global(h4),
+.content :global(p.hero-lead) {
+    scroll-margin-top: 48px;
+}
+
+.content :global(h3) {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+.content :global(p) {
+    margin-bottom: 1em;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+.content :global(a) {
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+}
+
+.content :global(a:hover) {
+    color: #eab308;
+    text-decoration-color: #eab308;
+}
+
+.content :global(code) {
+    font-family: var(--mono);
+    background: var(--surface-glass);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-size: 0.9em;
+    border: 1px solid var(--border);
+}
+
+.content :global(pre) {
+    background: #1c1c1a;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    margin-bottom: 1.5em;
+}
+
+.content :global(pre code) {
+    background: transparent;
+    padding: 0;
+    border: none;
+    color: #e8e8e4;
+}
+
+.content :global(ul), .content :global(ol) {
+    padding-left: 20px;
+    margin-bottom: 16px;
+    color: var(--text-muted);
+}
+
+.content :global(li) {
+    margin-bottom: 6px;
+}
+
+.content :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+    font-size: 13.5px;
+}
+
+.content :global(th) {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+}
+
+.content :global(td) {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+}
+
+.content :global(.hero-lead) {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: 40px;
+    line-height: 1.7;
+}
+
+.content :global(.card) {
+    background: var(--surface-glass);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+}
+
+/* Sidebar styling for inner HTML */
+.sidebar :global(.nav-logo) {
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+}
+
+.sidebar :global(.nav-logo h1) {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.sidebar :global(.nav-logo span) {
+    color: #4fa3d9;
+}
+
+.sidebar :global(.nav-logo p) {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.sidebar :global(.nav-section-label) {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    padding: 20px 0 8px;
+}
+
+.sidebar :global(a) {
+    display: block;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 6px 16px;
+    margin-left: 4px;
+    border-left: 1px solid var(--border);
+    transition: all 0.2s ease;
+    font-size: 14px;
+    scroll-margin-top: 48px;
+    scroll-margin-bottom: 48px;
+}
+
+.sidebar :global(a:hover),
+.sidebar :global(a.active) {
+    color: var(--text);
+    border-left-color: var(--text-muted);
+}
+
+

@@ -25,10 +25,14 @@ if (window.visualViewport) {
 window.addEventListener("resize", syncVisualViewport);
 syncVisualViewport();
 
+import { BrowserRouter } from "react-router-dom";
+
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
-        <AuthProvider>
-            <App />
-        </AuthProvider>
+        <BrowserRouter>
+            <AuthProvider>
+                <App />
+            </AuthProvider>
+        </BrowserRouter>
     </StrictMode>
 );
