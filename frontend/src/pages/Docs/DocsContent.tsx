@@ -16,9 +16,10 @@ export function DocsContent() {
                         const match = /language-(\w+)/.exec(className || '');
                         if (match && match[1] === 'mermaid') {
                             return (
-                                <div className="mermaid">
-                                    {String(children).replace(/\n$/, '')}
-                                </div>
+                                <div 
+                                    className="mermaid" 
+                                    dangerouslySetInnerHTML={{ __html: String(children).replace(/\n$/, '') }} 
+                                />
                             );
                         }
                         return (

@@ -13,7 +13,7 @@ const docsHtml = `
   <!-- ─────────────────────────────────────────────── -->
   <h2 id="architecture">Architecture</h2>
 
-  <div class="mermaid">
+  ```mermaid
 flowchart TD
     subgraph Client [Client Browser]
         direction LR
@@ -42,7 +42,7 @@ flowchart TD
 
     Client --> API
     API --> Backend
-  </div>
+```
 
   <!-- ─────────────────────────────────────────────── -->
   <h2 id="stack">Technology Stack</h2>
@@ -866,7 +866,7 @@ UNKNOWN    → <span style="color:#7b869a">hsl(220,  8%, 56%)</span></code></pre
 <!-- ══════════════════ DATA FLOW ══════════════════ -->
   <h2 id="data-lifecycle">Data Lifecycle</h2>
 
-  <div class="mermaid">
+  ```mermaid
 flowchart TD
     Start[Startup / Every 6 Hours] --> Fetch[fetch_data_for_water_bodies]
     Fetch --> Loop{For each WaterBody}
@@ -880,7 +880,7 @@ flowchart TD
     Nom --> Ins[(insert WaterBody)]
     Ins --> Cal[calibrate_station_thresholds]
     Ins --> FetchSingle[fetch_data_for_single_body]
-  </div>
+```
 
   <!-- ─────────────────────────────────────────────── -->
   <h2 id="scoring-logic">Scoring Logic</h2>
@@ -888,7 +888,7 @@ flowchart TD
 
   <h3>1. Rivers</h3>
   <p>Rivers are evaluated based on historical flow discharge percentiles.</p>
-  <div class="mermaid">
+  ```mermaid
 flowchart LR
     Riv[Flow Evaluation] --> RMiss[missing / max &lt; 1.0] --> U1[UNKNOWN]
     Riv --> RDang[flow &gt;= 95th pct] --> D1[DANGEROUS]
@@ -897,11 +897,11 @@ flowchart LR
     Riv --> RGood[otherwise] --> G1[GOOD]
 
     Riv --> Wind[Wind Evaluation]
-  </div>
+```
 
   <h3>2. Estuaries &amp; Lagoons</h3>
   <p>Tidal bodies are evaluated based on tidal heights and peaks.</p>
-  <div class="mermaid">
+  ```mermaid
 flowchart LR
     Tide[Tide Evaluation] --> TMiss[missing data] --> U2[UNKNOWN]
     Tide --> TPoor[tide &lt; 50th pct] --> P2[POOR]
@@ -909,17 +909,17 @@ flowchart LR
     Tide --> TExc[tide &gt;= 92nd pct] --> E2[EXCELLENT]
 
     Tide --> Wind[Wind Evaluation]
-  </div>
+```
 
   <h3>3. Coastal &amp; Reservoirs / Wind Evaluation</h3>
   <p>All stations undergo a final wind evaluation step. For coastal waters and reservoirs, this is the <em>only</em> metric evaluated.</p>
-  <div class="mermaid">
+  ```mermaid
 flowchart LR
     Wind[Wind Evaluation] --> WD[&gt; 40 km/h] --> D3[DANGEROUS]
     Wind --> WP[&gt; 25 km/h] --> P3[POOR]
     Wind --> WE[&lt;= 15 km/h] --> E3[EXCELLENT]
     Wind --> WG[15-25 km/h] --> G3[GOOD]
-  </div>
+```
 
   <p><strong>final_score aggregation (ignore UNKNOWNs):</strong></p>
   <ul>
