@@ -983,7 +983,7 @@ flowchart LR
   <h3>Backend</h3>
   <pre><code><span class="comment"># From project root</span>
 python -m venv .venv
-.venv\Scripts\activate          <span class="comment"># Windows</span>
+.venv&#92;Scripts&#92;activate          <span class="comment"># Windows</span>
 pip install -r requirements.txt
 
 <span class="comment"># Create tables (SQLAlchemy Base.metadata.create_all)</span>

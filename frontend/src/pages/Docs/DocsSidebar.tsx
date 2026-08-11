@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import styles from "./DocsApp.module.css";
 
 const SIDEBAR_SECTIONS = [
@@ -63,10 +62,12 @@ const SIDEBAR_SECTIONS = [
 ];
 
 export function DocsSidebar() {
-    const navigate = useNavigate();
     const [activeId, setActiveId] = useState<string>("");
     const activeIdRef = useRef(activeId);
-    activeIdRef.current = activeId;
+    
+    useEffect(() => {
+        activeIdRef.current = activeId;
+    }, [activeId]);
 
     useEffect(() => {
         const wrapper = document.getElementById('docs-content-wrapper');
